@@ -1,5 +1,5 @@
 /*
- * Midjourney Exporter - v7 MANUAL (Refactored)
+ * Midjourney Exporter
  *
  * Purpose: Scrapes job data (prompt, parameters, image URL) from the currently loaded
  *          Midjourney page in the browser and downloads it as a CSV file.
