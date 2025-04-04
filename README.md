@@ -31,8 +31,9 @@ Results will be saved as `.csv`
 
 ### 2. Planned features 📋
 1. Python based <br>
-1.1 Add download of images <br> 
-1.2 Add local paths to images after download<br>
+1.1 Remove duplicates (all columns)<br>
+1.2 Add download of images <br>
+1.3 Add local paths to images after download
 
 2. GenAI-based (API)<br>
 2.1 Tag images based on prompt (genAI-based)<br>
