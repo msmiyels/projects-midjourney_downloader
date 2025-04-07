@@ -1,0 +1,5 @@
+local/
+dev/
+scripts/
+tests/
+__pycache__/

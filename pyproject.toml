@@ -1,39 +1,28 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
-name = "mj_hackz"
+name = "mj_tools"
 version = "0.1.0"
 description = "A toolbox for listing information of generated images in MidJourney."
+
 authors = [
     { name = "Michael Steffen", email = "miyels@proton.me" }
 ]
+
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.11"
 keywords = ["midjourney", "images", "metadata", "extracting", "crawling"]
+
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
-
-dependencies = [
-    "google-api-python-client",
-    "google-generativeai",
-    "pandas",
-    "pillow",
-    "requests",
-    "python-dotenv"
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0"
+    "Operating System :: OS Independent"
 ]
 
 [project.urls]
@@ -41,5 +30,20 @@ dev = [
 "Source Code" = "https://github.com/msmiyels/projects-mj_hackz"
 "Bug Tracker" = "https://github.com/msmiyels/projects-mj_hackz/issues"
 
-[tool.setuptools.packages.find]
-where = ["src/python"]
+[tool.poetry]
+packages = [
+    { include = "mj_tools", from = "src/python" }
+]
+
+[tool.poetry.dependencies]
+google-api-python-client = "*"
+google-generativeai = "*"
+pandas = "^2.0.0"
+pillow = "10.3.0"
+requests = "^2.0.0"
+python-dotenv = "^0.20.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.0"
+flake8 = "^4.0.0"
+

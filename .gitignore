@@ -92,6 +92,7 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
 ### VirtualEnv template
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
@@ -186,3 +187,8 @@ fabric.properties
 
 # idea folder, uncomment if you don't need it
 .idea
+
+
+# Custom
+/local
+/dev

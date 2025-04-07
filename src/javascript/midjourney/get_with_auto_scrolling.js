@@ -1,17 +1,17 @@
 /*
- * Auto-Scrolling Midjourney Exporter
- *
- * Purpose: Automatically scrolls down the Midjourney page (targeting #pageScroll),
- *          scrapes job data (prompt, parameters, image URL) as it loads,
- *          and downloads it as a CSV file upon completion or manual stop.
- * Usage:   1. Navigate to your Midjourney job history page (e.g., Archive).
- *          2. Paste this entire script into the browser's developer console (F12).
- *          3. Run `midjourneyExporter.start()` in the console to begin scrolling and scraping.
- *          4. Run `midjourneyExporter.stop()` to halt the process manually (CSV will be generated).
- *          5. Optionally, run `midjourneyExporter.generate()` after stopping if needed.
- * Notes:   - DOM selectors may need updates if Midjourney changes its website structure.
- *          - Relies on finding a scrollable element with ID #pageScroll.
- *          - Has safety limits for iterations and checks to prevent infinite loops.
+     Auto-Scrolling Midjourney Exporter
+
+     Purpose: Automatically scrolls down the Midjourney page (targeting #pageScroll),
+              scrapes job data (prompt, parameters, image URL) as it loads,
+              and downloads it as a CSV file upon completion or manual stop.
+     Usage:   1. Navigate to your Midjourney job history page (e.g., Archive).
+              2. Paste this entire script into the browser's developer console (F12).
+              3. Run `midjourneyExporter.start()` in the console to begin scrolling and scraping.
+              4. Run `midjourneyExporter.stop()` to halt the process manually (CSV will be generated).
+              5. Optionally, run `midjourneyExporter.generate()` after stopping if needed.
+     Notes:   - DOM selectors may need updates if Midjourney changes its website structure.
+              - Relies on finding a scrollable element with ID #pageScroll.
+              - Has safety limits for iterations and checks to prevent infinite loops.
  */
 
 (function() {
@@ -20,30 +20,30 @@
     // ---- Configuration ----
 
     const CONFIG = {
-        scrollElementSelector: "#pageScroll", // The element that needs scrolling
-        waitAfterScrollMs: 1500,       // Time to wait for content to load after scrolling
-        scrollAmountFactor: 0.8,      // How much of the viewport height to scroll each time
-        maxChecksWithoutNew: 10,       // Stop if no new items found for this many consecutive checks (when scroll height is stable)
-        maxChecksNearScrollEnd: 5,    // Stop if near scroll end and no new items found for this many checks
-        maxIterations: 5000,          // Safety limit to prevent infinite loops
-        loopIntervalMs: 100,          // Short delay between loop checks after waiting period
+        scrollElementSelector: "#pageScroll",                               // The element that needs scrolling
+        waitAfterScrollMs: 1500,                                            // Time to wait for content to load after scrolling
+        scrollAmountFactor: 0.8,                                            // How much of the viewport height to scroll each time
+        maxChecksWithoutNew: 10,                                            // Stop if no new items found for this many consecutive checks (when scroll height is stable)
+        maxChecksNearScrollEnd: 5,                                          // Stop if near scroll end and no new items found for this many checks
+        maxIterations: 5000,                                                // Safety limit to prevent infinite loops
+        loopIntervalMs: 100,                                                // Short delay between loop checks after waiting period
         csvFilenamePrefix: 'midjourney_auto_export_',
         logPrefix: '[Exporter Auto]',
-        debugLog: false                // Set to true for more verbose console output
+        debugLog: false                                                     // Set to true for more verbose console output
     };
 
     const SELECTORS = {
-        jobContainer: 'div.absolute.flex-col.grid[class*="grid-cols"]', // Main container for a job/grid
-        promptWrapper: 'div.relative.group\\/promptText', // Primary prompt location
-        promptSpan: 'span.relative',                   // Span inside the primary wrapper
-        promptFallback: 'div.overflow-clip.flex.relative span.relative', // Fallback prompt location
-        paramsContainer: 'div.flex.flex-wrap.gap-1.empty\\:hidden', // Container for parameter buttons
-        paramButton: 'button',                            // Buttons holding parameters
-        paramNameSpan: 'span.opacity-80 > span.opacity-80', // Inner span containing the parameter name (e.g., "--ar")
-        paramValueSibling: 'span:not(.opacity-80)',      // Potential sibling span containing part of the value
-        imageGrid: 'div.grid.gap-\\[1px\\], div.grid.lg\\:gap-2', // Container for the image(s)
-        imageLink: 'div.relative.group > a',             // Link surrounding the image
-        imageElement: 'img[src*="cdn.midjourney.com/"]', // The actual image element
+        jobContainer: 'div.absolute.flex-col.grid[class*="grid-cols"]',     // Main container for a job/grid
+        promptWrapper: 'div.relative.group\\/promptText',                   // Primary prompt location
+        promptSpan: 'span.relative',                                        // Span inside the primary wrapper
+        promptFallback: 'div.overflow-clip.flex.relative span.relative',    // Fallback prompt location
+        paramsContainer: 'div.flex.flex-wrap.gap-1.empty\\:hidden',         // Container for parameter buttons
+        paramButton: 'button',                                              // Buttons holding parameters
+        paramNameSpan: 'span.opacity-80 > span.opacity-80',                 // Inner span containing the parameter name (e.g., "--ar")
+        paramValueSibling: 'span:not(.opacity-80)',                         // Potential sibling span containing part of the value
+        imageGrid: 'div.grid.gap-\\[1px\\], div.grid.lg\\:gap-2',           // Container for the image(s)
+        imageLink: 'div.relative.group > a',                                // Link surrounding the image
+        imageElement: 'img[src*="cdn.midjourney.com/"]',                    // The actual image element
     };
 
     const DEFAULT_VALUES = {
@@ -52,38 +52,42 @@
         pngSrc: 'NO_IMAGE_SRC',
     };
 
+
     // ---- State Variables ----
 
     let scrollTimeoutId = null;
     let loopTimeoutId = null;
-    let processedContainerTops = new Set(); // Tracks containers by their 'top' style property
-    let allParamNames = new Set();          // Unique parameter names found
-    let intermediateData = [];              // Stores extracted {jobId, pngSrc, prompt, jobParams}
+    let processedContainerTops = new Set();                                 // Tracks containers by their 'top' style property
+    let allParamNames = new Set();                                          // Unique parameter names found
+    let intermediateData = [];                                              // Stores extracted {jobId, pngSrc, prompt, jobParams}
     let consecutiveNoNewElements = 0;
     let currentIteration = 0;
     let isRunning = false;
-    let scrollableElement = null;           // The DOM element to scroll
-    let lastScrollHeight = 0;               // Track scroll height between iterations
+    let scrollableElement = null;                                           // The DOM element to scroll
+    let lastScrollHeight = 0;                                               // Track scroll height between iterations
+
 
     // ---- Helper Functions ----
 
-    /**
-     * Logs messages to the console, prefixed consistently.
-     * @param {string} level - 'log', 'warn', 'error', 'debug'
-     * @param {...any} args - Messages or objects to log
+    /*
+         Logs messages to the console, prefixed consistently.
+         @param {string} level - 'log', 'warn', 'error', 'debug'
+         @param {...any} args - Messages or objects to log
      */
     function log(level, ...args) {
         const prefix = CONFIG.logPrefix;
+
+        // Skip debug logs if disabled
         if (level === 'debug' && !CONFIG.debugLog) {
-            return; // Skip debug logs if disabled
+            return;
         }
         console[level](prefix, ...args);
     }
 
-    /**
-     * Creates a CSV file from a string and initiates download.
-     * @param {string} csvContent - The CSV data as a single string.
-     * @param {string} filename - The desired name for the downloaded file.
+    /*
+         Creates a CSV file from a string and initiates download.
+         @param {string} csvContent - The CSV data as a single string.
+         @param {string} filename - The desired name for the downloaded file.
      */
     function downloadCSV(csvContent, filename) {
         // UTF-8 BOM for Excel
@@ -103,10 +107,10 @@
         log('log', `Download initiated for: ${filename}`);
     }
 
-    /**
-     * Escapes a string for use in a CSV field according to RFC 4180.
-     * @param {string|number|null|undefined} field - The value to escape.
-     * @returns {string} The escaped string, ready for CSV.
+    /*
+        Escapes a string for use in a CSV field according to RFC 4180.
+        @param {string|number|null|undefined} field - The value to escape.
+        @returns {string} The escaped string, ready for CSV.
      */
     function escapeCsvField(field) {
         if (field === null || field === undefined) {
@@ -116,18 +120,21 @@
         return `"${stringField.replace(/"/g, '""')}"`;
     }
 
+
     // ---- Data Extraction (Processing a Single Container) ----
 
-    /**
-     * Extracts data from a single job container and updates shared state.
-     * @param {Element} jobContainer - The DOM element of the job container.
-     * @param {string} containerId - A unique identifier for this container (usually style.top or a generated fallback).
-     */
+    /*
+        Extracts data from a single job container and updates shared state.
+        @param {Element} jobContainer - The DOM element of the job container.
+        @param {string} containerId - A unique identifier for this container (usually style.top or a generated fallback).
+    */
     function processContainer(jobContainer, containerId) {
         log('debug', `Processing NEW container with ID: ${containerId}`);
-        processedContainerTops.add(containerId); // Mark as processed
 
-        // ---- Extract Prompt ----
+        // Mark as processed
+        processedContainerTops.add(containerId);
+
+        // Extract Prompt
         const promptWrapper = jobContainer.querySelector(SELECTORS.promptWrapper);
         let promptText = DEFAULT_VALUES.prompt;
         if (promptWrapper) {
@@ -137,7 +144,7 @@
             promptText = jobContainer.querySelector(SELECTORS.promptFallback)?.textContent?.trim() ?? promptText;
         }
 
-        // ---- Extract Parameters ----
+        // Extract Parameters
         const jobParams = {};
         const potentialParamsContainers = Array.from(jobContainer.querySelectorAll(SELECTORS.paramsContainer));
         const paramsContainer = potentialParamsContainers.find(container => container.querySelector(SELECTORS.paramButton));
@@ -163,14 +170,16 @@
                 }
                 paramValue = paramValue.trim();
 
-                if (!paramValue) { paramValue = "true"; } // Handle flag parameters
+                // Handle flag parameters
+                if (!paramValue) { paramValue = "true"; }
 
-                allParamNames.add(paramName); // Add to global set
+                // Add to global set
+                allParamNames.add(paramName);
                 jobParams[paramName] = paramValue;
             });
         }
 
-        // ---- Extract Images and Store Data ----
+        // Extract Images and Store Data
         const imageGridContainer = jobContainer.querySelector(SELECTORS.imageGrid);
         let processedImage = false;
         if (imageGridContainer) {
@@ -202,11 +211,12 @@
         }
     }
 
+
     // ---- CSV Generation ----
 
-    /**
-     * Generates the final CSV content from intermediateData and initiates download.
-     */
+    /*
+        Generates the final CSV content from intermediateData and initiates download.
+    */
     function generateFinalCsv() {
         log('debug', 'generateFinalCsv() called.');
         log('debug', `generateFinalCsv: intermediateData contains ${intermediateData.length} entries.`);
@@ -223,17 +233,19 @@
         const header = ['job_id', 'url', 'prompt', ...sortedParamNames];
 
         log('debug', `Final CSV Header: ${header.join(', ')}`);
-        csvRows.push(header.map(escapeCsvField).join(',')); // Add escaped header row
+
+        // Add escaped header row
+        csvRows.push(header.map(escapeCsvField).join(','));
 
         intermediateData.forEach(entry => {
             const rowData = [
                 escapeCsvField(entry.jobId),
                 escapeCsvField(entry.pngSrc),
-                escapeCsvField(entry.prompt), // Escape prompt here
+                escapeCsvField(entry.prompt),                               // Escape prompt
             ];
             const paramValues = sortedParamNames.map(colName => {
                 const value = entry.jobParams[colName];
-                return escapeCsvField(value ?? ''); // Escape each parameter value
+                return escapeCsvField(value ?? '');                         // Escape each parameter value
             });
             csvRows.push([...rowData, ...paramValues].join(','));
         });
@@ -255,12 +267,13 @@
 
     // ---- Auto-Scrolling Core Loop ----
 
-    /**
-     * The main loop that scrolls, waits, processes, and checks stop conditions.
-     */
+    /*
+        The main loop that scrolls, waits, processes, and checks stop conditions.
+    */
     function scrollAndProcessLoop() {
         if (!isRunning || !scrollableElement) {
             log('debug', "Loop check: Stopping (isRunning false or scrollableElement missing).");
+
             // Ensure cleanup if stopped unexpectedly
             if (isRunning) stopAutoScrollExport(false);
             return;
@@ -272,6 +285,7 @@
         log('log', "Scrolling down...");
         const currentScrollTop = scrollableElement.scrollTop;
         const clientHeight = scrollableElement.clientHeight;
+
         // Record scroll height *before* this iteration's scroll action
         lastScrollHeight = scrollableElement.scrollHeight;
 
@@ -282,7 +296,6 @@
             log('debug', `Scrolled from ${currentScrollTop} to ${scrollableElement.scrollTop}. Scroll height before this scroll: ${lastScrollHeight}`);
         }, 50);
 
-
         // Wait for content to potentially load after scrolling
         scrollTimeoutId = setTimeout(() => {
             if (!isRunning) { log('debug', "Timeout check: isRunning is false. Stopping."); return; }
@@ -290,7 +303,7 @@
             let foundNewElements = false;
             let processingErrorOccurred = false;
 
-            // ---- Process Newly Loaded Containers ----
+            // Process Newly Loaded Containers
             try {
                 log('debug', 'Scanning for job containers...');
                 const allJobContainers = document.querySelectorAll(SELECTORS.jobContainer);
@@ -298,7 +311,7 @@
                 log('debug', `Found ${allJobContainers.length} potential containers in DOM.`);
 
                 allJobContainers.forEach(container => {
-                    // Use style.top as the primary identifier. It seems to be unique per item in Midjourney's layout.
+                    // Use style.top as the primary identifier
                     const containerTop = container.style.top;
                     let containerId = containerTop;
 
@@ -306,14 +319,14 @@
                         // Fallback for containers without style.top (less reliable tracking)
                         containersWithoutTop++;
                         log('warn', "Container without style.top found. Processing with generated ID:", container);
-                        // Generate a pseudo-ID; check if *this specific element* was processed (less efficient)
-                        // For simplicity here, we'll still use a generated ID, but acknowledge it's less robust.
-                        // A better approach might involve WeakSet or element comparison if style.top is unreliable.
+
+                        // Generate a pseudo-ID; check if *this specific element* was processed
                         containerId = `noTop_${Date.now()}_${Math.random()}`;
-                        // Process only if this *generated* ID isn't somehow already in the set (unlikely but possible)
+
+                        // Process only if this *generated* ID isn't somehow already in the set
                          if (!processedContainerTops.has(containerId)) {
                             processContainer(container, containerId);
-                            foundNewElements = true; // Assume it's new if no reliable ID
+                            foundNewElements = true;
                          }
                     } else if (!processedContainerTops.has(containerTop)) {
                         // Unique style.top found and not yet processed
@@ -334,11 +347,21 @@
 
             // ---- Check Stop Conditions ----
             const currentScrollHeight = scrollableElement.scrollHeight;
+
             // Check if scroll height *remained the same* compared to before we scrolled in *this* iteration
             const scrollHeightUnchanged = currentScrollHeight === lastScrollHeight;
-            const isNearScrollEnd = (scrollableElement.scrollTop + scrollableElement.clientHeight >= currentScrollHeight - 20); // Check if near the bottom
 
-            log('debug', `Stop Check: Iter=${currentIteration}/${CONFIG.maxIterations}, FoundNew=${foundNewElements}, ScrollUnchanged=${scrollHeightUnchanged}, Consecutive=${consecutiveNoNewElements}, isNearEnd=${isNearScrollEnd}, Error=${processingErrorOccurred}`);
+            // Check if near the bottom
+            const isNearScrollEnd = (scrollableElement.scrollTop + scrollableElement.clientHeight >= currentScrollHeight - 20);
+
+            log('debug', `Stop Check:
+                Iter=${currentIteration}/${CONFIG.maxIterations},
+                FoundNew=${foundNewElements},
+                ScrollUnchanged=${scrollHeightUnchanged},
+                Consecutive=${consecutiveNoNewElements},
+                isNearEnd=${isNearScrollEnd},
+                Error=${processingErrorOccurred}`
+            );
 
             let stopReason = null;
             if (processingErrorOccurred) {
@@ -347,7 +370,8 @@
                 stopReason = `Maximum iterations (${CONFIG.maxIterations}) reached.`;
             } else {
                 if (foundNewElements) {
-                    consecutiveNoNewElements = 0; // Reset counter if new things were found
+                    // Reset counter if new things were found
+                    consecutiveNoNewElements = 0;
                 } else {
                     consecutiveNoNewElements++;
                     // Primary stop: Nothing new AND scroll height hasn't changed for a while
@@ -363,10 +387,10 @@
 
             // ---- Plan Next Step or Stop ----
             if (stopReason) {
+                // Stop and trigger CSV generation
                 log('log', `Stop condition met: ${stopReason}. Stopping auto-scroll and generating CSV.`);
-                stopAutoScrollExport(true); // Stop and trigger CSV generation
+                stopAutoScrollExport(true);
             } else {
-                // Continue the loop
                 if (isRunning) {
                     // Schedule the next iteration after a short pause
                     loopTimeoutId = setTimeout(scrollAndProcessLoop, CONFIG.loopIntervalMs);
@@ -375,15 +399,15 @@
                 }
             }
 
-        }, CONFIG.waitAfterScrollMs); // Wait after scrolling for content load
+        }, CONFIG.waitAfterScrollMs);
     }
 
 
     // ---- Control Functions ----
 
-    /**
-     * Starts the auto-scrolling and data extraction process.
-     */
+    /*
+        Starts the auto-scrolling and data extraction process
+    */
     function startAutoScrollExport() {
         if (isRunning) {
             log('warn', "Already running.");
@@ -398,7 +422,6 @@
             return;
         }
         log('debug', `Using scrollable element found with selector "${CONFIG.scrollElementSelector}":`, scrollableElement);
-
         log('log', `Starting auto-scroll process. Wait after scroll: ${CONFIG.waitAfterScrollMs}ms.`);
         isRunning = true;
 
@@ -409,11 +432,10 @@
         consecutiveNoNewElements = 0;
         currentIteration = 0;
         lastScrollHeight = 0;
-        clearTimeout(scrollTimeoutId); // Clear any lingering timeouts
+        clearTimeout(scrollTimeoutId);
         clearTimeout(loopTimeoutId);
         scrollTimeoutId = null;
         loopTimeoutId = null;
-
 
         // Scroll to top before starting
         scrollableElement.scrollTop = 0;
@@ -421,12 +443,14 @@
 
         // Start the first iteration of the loop after a short delay
         log('debug', "Initial call to scrollAndProcessLoop starting soon...");
-        loopTimeoutId = setTimeout(scrollAndProcessLoop, 500); // Start first loop run
+
+        // Start first loop run
+        loopTimeoutId = setTimeout(scrollAndProcessLoop, 500);
     }
 
-    /**
-     * Stops the auto-scrolling process.
-     * @param {boolean} [generateCsv=false] - If true, automatically triggers CSV generation after stopping.
+    /*
+        Stops the auto-scrolling process.
+        @param {boolean} [generateCsv=false] - If true, automatically triggers CSV generation after stopping.
      */
     function stopAutoScrollExport(generateCsv = false) {
         log('debug', `stopAutoScrollExport() called with generateCsv=${generateCsv}. Current running state: ${isRunning}`);
@@ -441,7 +465,6 @@
             }
             return;
         }
-
         isRunning = false; // Set flag immediately to prevent loops from continuing
 
         // Clear any scheduled timeouts
@@ -455,7 +478,6 @@
             loopTimeoutId = null;
             log('debug', 'Cleared loopTimeoutId.');
         }
-
         log('log', "Auto-scroll process stopped.");
 
         if (generateCsv) {
@@ -469,13 +491,23 @@
 
     // ---- Public Interface ----
 
-    // Expose control functions to the global scope for console access
+    /*
+        Expose control functions to the global scope for console access
+    */
     window.midjourneyExporter = {
         start: startAutoScrollExport,
-        stop: () => stopAutoScrollExport(true), // Default stop action generates CSV
-        stopWithoutCsv: () => stopAutoScrollExport(false), // Option to stop without generating CSV
-        generate: generateFinalCsv, // Allow manual generation if stopped without CSV
-        toggleDebug: () => { // Utility to toggle debug logs
+
+        // Default stop action generates CSV
+        stop: () => stopAutoScrollExport(true),
+
+        // Option to stop without generating CSV
+        stopWithoutCsv: () => stopAutoScrollExport(false),
+
+        // Allow manual generation if stopped without CSV
+        generate: generateFinalCsv,
+
+        // Utility to toggle debug logs
+        toggleDebug: () => {
              CONFIG.debugLog = !CONFIG.debugLog;
              log('log', `Debug logging ${CONFIG.debugLog ? 'enabled' : 'disabled'}.`);
         }
