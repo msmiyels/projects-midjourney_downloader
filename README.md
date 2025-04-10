@@ -58,7 +58,7 @@ You need this for `Python` features only!
    You can provide your own environment name by adding the name tag `--name your-env-name`.<p>
 
 
-2. Install the package locally:
+2. Install the package locally in editable mode:
 
     ```bash
     pip install -e .
@@ -90,11 +90,21 @@ You need this for `Python` features only!
 
    **Automatically**<p>
    Use the shell script `setup/docker_run.sh` to start the Docker container automatically 
-   (without development depencencies).
+   (without development depencencies). This option also exposes port `8888` for JupyterLab and mounts the
+   `app` folder from the repository to `/app`.
 <p>
 
 3. The Docker installation is based on [uv](https://docs.astral.sh/uv/) to keep the image 
    as small and the installation as fast as possible.<p>
+If you want to run uv commands inside the container, please always use the `--active` flage, like
+
+   ```bash
+   uv run python --active
+   ```
+   Otherwise, it will start to install the virtual environment into the local GitHub folder, which is not intended.
+   If you already got over this issue, you can safely delete the `.venv` folder in the repository, since it is 
+   correctly installed inside the container in `opt/venv`.
+   
 
 ## Further documentation
 Read the documentation in [docs](docs) to get started and for more information.
