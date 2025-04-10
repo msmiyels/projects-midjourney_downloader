@@ -65,14 +65,19 @@ You need this for `Python` features only!
     ```
 
 ### Docker installation
-1. Create the Docker image
-
+1. Create the Docker image<p>
+   **Without development dependencies**:
     ```bash
-    docker build -t mj_hackz
+    docker build -t miyels/mj_hackz:latest --no-cache .
+    ```
+   
+    **With development dependencies**:
+    ```bash
+    docker build -t miyels/mj_hackz:latest --no-cache --build-arg USE_DEV=true .
     ```
 
-2. Start the Docker container
-
+2. Start the Docker containery<p>
+   **Manually**<p>
    ```bash
    docker run -it --rm mj_hackz
    ```
@@ -82,6 +87,14 @@ You need this for `Python` features only!
       ```bash
       docker run -it --rm -v /path/to/local/dir:/app/local_dir mj_hackz
       ```
+
+   **Automatically**<p>
+   Use the shell script `setup/docker_run.sh` to start the Docker container automatically 
+   (without development depencencies).
+<p>
+
+3. The Docker installation is based on [uv](https://docs.astral.sh/uv/) to keep the image 
+   as small and the installation as fast as possible.<p>
 
 ## Further documentation
 Read the documentation in [docs](docs) to get started and for more information.

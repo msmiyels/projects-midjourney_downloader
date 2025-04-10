@@ -1,0 +1,14 @@
+name: miyels-mj_hackz
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - google-api-python-client>=2.0.0
+  - google-generativeai>=0.8.0
+  - pandas>=2.0.0
+  - pillow>=10.3.0
+  - requests>=2.0.0
+  - python-dotenv>=1.0.0
+  - pytest>=8.3.0
+  - flake8>=4.0.0

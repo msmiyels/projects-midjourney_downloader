@@ -2,7 +2,7 @@
 FROM python:3.11-slim
 
 # Non-root user arguments
-ARG USERNAME=devuser
+ARG USERNAME=user
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
@@ -35,8 +35,15 @@ USER $USERNAME
 # Copy project and set ownership
 COPY --chown=$USERNAME:$USER_GID . /app
 
-# Install dependencies and local package in editable mode
-RUN uv pip install --no-cache -e .
+# Define installation arguments
+ARG USE_DEV=false
+
+# Install dependencies based on the boolean argument
+RUN if [ "$USE_DEV" = "true" ]; then \
+        uv sync --active; \
+    else \
+        uv sync --no-dev --active; \
+    fi
 
 # Run bash
 CMD ["/bin/bash"]

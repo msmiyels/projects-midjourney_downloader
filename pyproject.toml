@@ -1,6 +1,6 @@
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "mj_tools"
@@ -17,6 +17,8 @@ requires-python = ">=3.11"
 keywords = ["midjourney", "images", "metadata", "extracting", "crawling"]
 
 classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -30,20 +32,21 @@ classifiers = [
 "Source Code" = "https://github.com/msmiyels/projects-mj_hackz"
 "Bug Tracker" = "https://github.com/msmiyels/projects-mj_hackz/issues"
 
-[tool.poetry]
-packages = [
-    { include = "mj_tools", from = "src/python" }
+[tool.uv]
+default-groups = ["all"]
+
+[dependency-groups]
+dependencies = [
+    "google-api-python-client>=2.0.0",
+    "google-generativeai>=0.8.0",
+    "pandas>=2.0.0",
+    "pillow>=10.3.0",
+    "requests>=2.0.0",
+    "python-dotenv>=1.0.0",
+    { path = "src/python/mj_tools", develop="true" }
 ]
 
-[tool.poetry.dependencies]
-google-api-python-client = "*"
-google-generativeai = "*"
-pandas = "^2.0.0"
-pillow = "10.3.0"
-requests = "^2.0.0"
-python-dotenv = "^0.20.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.0.0"
-flake8 = "^4.0.0"
-
+dev = [
+    "pytest>=8.3.0",
+    "flake8>=4.0.0"
+]
