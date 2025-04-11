@@ -191,4 +191,4 @@ fabric.properties
 # Custom
 local/
 dev/
-src/data/
+data/

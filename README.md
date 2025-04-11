@@ -47,21 +47,49 @@ You need this for `Python` features only!
 2. Open a terminal instance and navigate to the repository directory
 3. Create a virtual environment and install dependencies
 
-### Conda installation
-1. Create a Conda environment and install dependencies:
+### Local installation
+This project uses [uv](https://docs.astral.sh/uv/) for package management.<p>
+If you have [uv](https://docs.astral.sh/uv/) not installed yet, please follow 
+the [installation instructions](https://docs.astral.sh/uv/installation/).<br>
+Otherwise, continue with the following commands to install the project locally:<p>
+
+1. Check if you have the correct python version available on your local machine:
 
     ```bash
-    conda env create -f environment.yml
-    conda activate miyels-mj_hackz
+    uv python list
+    ```
+   
+2. Create a virtual environment:
+
+    ```bash
+    uv venv
    ```
    
-   You can provide your own environment name by adding the name tag `--name your-env-name`.<p>
-
-
-2. Install the package locally in editable mode:
+   This creates a `.venv` folder inside the repository directory.<br>
+   You can provide your own environment name by adding the name `name your-env-name` after the command, like:
 
     ```bash
-    pip install -e .
+    uv venv your-env-name
+    ```
+
+3. Activate the environment:
+
+    ```bash
+    source .venv/bin/activate
+    ```
+   
+   If you did not use the default naming option, replace `.venv` with the custom name.<p>
+<p>
+
+4. Install the project dependencies:<p>
+   **All dependencies, including packages for development**:
+    ```bash
+    uv sync 
+    ```
+   
+   **Only production dependencies**:
+    ```bash
+    uv sync --no-dev
     ```
 
 ### Docker installation
@@ -90,13 +118,11 @@ You need this for `Python` features only!
 
    **Automatically**<p>
    Use the shell script `setup/docker_run.sh` to start the Docker container automatically 
-   (without development depencencies). This option also exposes port `8888` for JupyterLab and mounts the
+   (without development depencencies). This option also exposes port `:8888` for JupyterLab and mounts the
    `app` folder from the repository to `/app`.
 <p>
 
-3. The Docker installation is based on [uv](https://docs.astral.sh/uv/) to keep the image 
-   as small and the installation as fast as possible.<p>
-If you want to run uv commands inside the container, please always use the `--active` flage, like
+3. If you want to run uv commands inside the container, please always use the `--active` flage, like
 
    ```bash
    uv run python --active

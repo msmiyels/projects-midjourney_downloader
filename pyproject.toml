@@ -33,13 +33,13 @@ classifiers = [
 "Bug Tracker" = "https://github.com/msmiyels/projects-mj_hackz/issues"
 
 [tool.uv]
-default-groups = ["all"]
+default-groups = ["dependencies", "dev"]
 
 [dependency-groups]
 dependencies = [
     "google-api-python-client>=2.0.0",
     "google-generativeai>=0.8.0",
-    "pandas>=2.0.0",
+    "pandas>=2.2.3",
     "pillow>=10.3.0",
     "requests>=2.0.0",
     "python-dotenv>=1.0.0",
