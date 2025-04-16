@@ -1,0 +1,579 @@
+/* web/css/style.css */
+
+/* ==========================================================================
+   Base Styles & Variables
+   ========================================================================== */
+
+:root {
+    /* Color Palette */
+    --color-bg: #F5F5F5;
+    --color-surface: #FFFFFF;
+    --color-text: #10100D;
+    --color-text-on-dark: #FFFFFF;
+    --color-text-muted: #555555; /* Used for H3 and some hints */
+    --color-border: transparent;
+    --color-border-strong: transparent;
+    --color-accent: #0d6efd;
+    --color-button-bg: #10100D;
+    --color-button-text: #FFFFFF;
+    --color-button-hover-bg: #333333;
+    --color-upload-bg: #EDEDED;
+    --color-upload-hover-bg: #E9E9E9;
+    --color-success: rgb(103, 103, 103); /* Subtle success color */
+    --color-warning: var(--color-text);
+    --color-warning-bg: #ffc107;
+    --color-danger: #dc3545;
+    --color-info: var(--color-accent);
+
+    /* Typography */
+    --font-family-sans: 'Work Sans', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+    --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --base-font-size: 16px;
+    --base-line-height: 1.6;
+
+    /* Layout & Spacing */
+    --border-radius: 4px;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 2rem;
+    --preview-area-height: 500px;
+    --status-area-height: 150px;
+    --header-padding: var(--spacing-lg);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    font-family: var(--font-family-sans);
+    font-size: var(--base-font-size);
+    line-height: var(--base-line-height);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    margin: 0;
+}
+
+/* ==========================================================================
+   Header & Navigation
+   ========================================================================== */
+#appHeader {
+    background-color: var(--color-surface);
+    padding: var(--header-padding) 0;
+    margin-bottom: var(--spacing-lg);
+}
+.container { /* Shared container class, header uses it */
+    background-color: transparent; /* Overrides potential default */
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--header-padding); /* Horizontal padding */
+    box-shadow: none;
+    border-radius: 0;
+}
+#mainTitle {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-md) 0;
+    padding: 0;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+#mainTitle svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--color-text);
+    flex-shrink: 0;
+}
+#appHeader hr {
+    border: none;
+    border-top: 1px solid #DDDDDD; /* Subtle separator */
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+#toolNavigation {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+.nav-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    background-color: transparent;
+    border: 1px solid var(--color-text-muted);
+    color: var(--color-text-muted);
+    border-radius: var(--border-radius);
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+.nav-button:hover {
+    background-color: var(--color-upload-bg);
+    color: var(--color-text);
+    border-color: var(--color-text);
+}
+.nav-button.active {
+    background-color: var(--color-button-bg);
+    color: var(--color-button-text);
+    border-color: var(--color-button-bg);
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   Module Content Area (General Styles)
+   ========================================================================== */
+.module-content {
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Module H2 Styles */
+.module-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.4;
+}
+
+/* Module H3 Styles */
+.module-content h3 {
+    font-size: 1.0rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    border-bottom: none;
+    padding-bottom: 0;
+    margin: var(--spacing-lg) 0 var(--spacing-md) 0; /* Increased top margin */
+}
+/* Prevent top margin on the very first H3 within a module */
+.module-content h3:first-of-type {
+    margin-top: 0;
+}
+/* #previewAreaTitle and #statusTitle inherit styles from .module-content h3 */
+
+.module-content p {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+    font-size: 1rem;
+    font-weight: 400;
+}
+.module-content p code { /* Inline code style */
+    background-color: var(--color-text);
+    color: var(--color-text-on-dark);
+    padding: 0.15em 0.4em;
+    border-radius: var(--border-radius);
+    font-family: var(--font-family-monospace);
+    font-size: 0.9em;
+}
+
+/* ==========================================================================
+   File Input Area (Upload/Dropzone)
+   ========================================================================== */
+#fileInputArea {
+    display: flex;
+    border: none;
+    margin-bottom: var(--spacing-lg);
+    overflow: visible;
+    gap: var(--spacing-md);
+}
+.split-input-section { /* Styles for both click-upload and dropzone areas */
+    flex: 1;
+    padding: var(--spacing-lg);
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--color-text);
+    border: none;
+    background-color: var(--color-upload-bg);
+    border-radius: var(--border-radius);
+}
+.split-input-section:hover {
+    background-color: var(--color-upload-hover-bg);
+}
+#dropZoneTarget.hover { /* Style when dragging file over dropzone */
+    background-color: #ced4da;
+    outline: 2px dashed var(--color-text-muted);
+    outline-offset: -4px;
+}
+.input-icon { /* Icon within upload areas */
+    width: 32px;
+    height: 32px;
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text-muted);
+}
+.input-text { /* Main text in upload areas */
+    font-size: 0.9em;
+    color: var(--color-text);
+    font-weight: 500;
+}
+.input-hint { /* Smaller hint text */
+    font-size: 0.8em;
+    color: var(--color-text-muted);
+    margin-top: var(--spacing-sm);
+    font-weight: 400;
+}
+#fileNameDisplay { /* Displays the name of the selected file */
+    text-align: center;
+    margin-top: calc(-1 * var(--spacing-lg) + var(--spacing-sm)); /* Adjust spacing relative to input area */
+    margin-bottom: var(--spacing-lg);
+    font-style: normal;
+    color: var(--color-text);
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   Controls (Buttons)
+   ========================================================================== */
+#controls {
+    margin-top: 0;
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-wrap: wrap;
+}
+.button { /* General button style */
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-color: var(--color-button-bg);
+    border: none;
+    color: var(--color-button-text);
+    border-radius: var(--border-radius);
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+.button:hover:not(:disabled) {
+    background-color: var(--color-button-hover-bg);
+}
+/* Specific button IDs don't need extra styles unless different from .button */
+
+#pauseResumeButton { /* Pause/Resume specific styling */
+    background-color: var(--color-upload-bg); /* Lighter background */
+    color: var(--color-text);
+    padding: 0.6rem 0.8rem; /* Slightly narrower */
+    border: none;
+}
+#pauseResumeButton:hover:not(:disabled) {
+    background-color: var(--color-upload-hover-bg);
+}
+
+#stopButton { /* Stop button specific styling */
+    background-color: var(--color-warning-bg); /* Warning color */
+    color: var(--color-text);
+    padding: 0.6rem 0.8rem; /* Slightly narrower */
+    border: none;
+}
+#stopButton:hover:not(:disabled) {
+    background-color: #e0a800; /* Darker warning color */
+}
+
+/* Ensure disabled styles override specific button colors */
+.button:disabled,
+#pauseResumeButton:disabled,
+#stopButton:disabled {
+     background-color: #adb5bd !important; /* Use important to override specifics */
+     border: none;
+     color: #fff !important;
+     opacity: 0.65;
+     cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Progress Bar
+   ========================================================================== */
+#progressContainer {
+    margin-bottom: var(--spacing-lg);
+    width: 100%;
+}
+progress { /* Native progress element styling */
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    appearance: none;
+    overflow: hidden;
+    border: none;
+}
+/* Webkit progress bar styles */
+progress::-webkit-progress-bar {
+    background-color: #e9ecef;
+    border-radius: 3px;
+}
+progress::-webkit-progress-value {
+    background-color: var(--color-text);
+    border-radius: 3px;
+    transition: width 0.2s ease;
+}
+/* Mozilla progress bar styles */
+progress::-moz-progress-bar {
+    background-color: var(--color-text);
+    border-radius: 3px;
+    transition: width 0.2s ease;
+}
+#progressText { /* Text below progress bar */
+    text-align: center;
+    margin-top: var(--spacing-sm);
+    font-size: 0.9em;
+    color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Main Content Layout (Prompt & Preview)
+   ========================================================================== */
+#mainContentArea {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: flex-start; /* Align items to the top */
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Prompt Display Area */
+#promptDisplayArea {
+    flex: 3 1 60%; /* Flexible width, takes more space */
+    min-width: 300px;
+    height: var(--preview-area-height);
+    padding: var(--spacing-md);
+    background-color: var(--color-upload-bg);
+    border-radius: var(--border-radius);
+    overflow-y: auto; /* Enable vertical scrolling */
+    font-family: var(--font-family-sans); /* Use sans-serif for readability */
+    font-size: 0.9em;
+    line-height: 1.6;
+    color: var(--color-text);
+    white-space: pre-wrap; /* Preserve whitespace and wrap lines */
+    font-weight: 400;
+    scrollbar-width: thin; /* Firefox scrollbar */
+    scrollbar-color: var(--color-text) var(--color-upload-bg); /* Firefox scrollbar */
+}
+/* Webkit scrollbar styles */
+#promptDisplayArea::-webkit-scrollbar { width: 8px; height: 8px; }
+#promptDisplayArea::-webkit-scrollbar-track { background: var(--color-upload-bg); border-radius: 4px; }
+#promptDisplayArea::-webkit-scrollbar-thumb { background-color: var(--color-text); border-radius: 4px; }
+#promptDisplayArea::-webkit-scrollbar-thumb:hover { background-color: var(--color-button-hover-bg); }
+
+/* Image Preview Area */
+#imagePreviewContainer {
+    flex: 2 1 40%; /* Flexible width, takes less space */
+    min-width: 250px;
+    height: var(--preview-area-height);
+    padding: 0;
+    border: none;
+    border-radius: var(--border-radius);
+    overflow: hidden; /* Hide overflowing parts of the background image */
+    background-color: transparent; /* Allow background image to show */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center placeholder vertically */
+    align-items: center; /* Center placeholder horizontally */
+    background-size: cover; /* Scale image to cover area */
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-image: none; /* Initially no image */
+    position: sticky; /* Keep preview visible while scrolling */
+    top: var(--spacing-md);
+    align-self: flex-start; /* Prevent stretching if prompt area is taller */
+}
+#imagePreviewPlaceholder { /* Text shown when no image is loaded */
+    color: var(--color-text-muted);
+    font-size: 0.9em;
+    padding: var(--spacing-md);
+    font-weight: 400;
+}
+
+/* ==========================================================================
+   Status Log Area
+   ========================================================================== */
+#statusWrapper {
+    margin-top: var(--spacing-lg);
+}
+/* #statusTitle inherits H3 styles */
+#status { /* The log container */
+    padding: 0;
+    border: none;
+    background-color: var(--color-bg); /* Match page background */
+    max-height: var(--status-area-height);
+    overflow-y: auto; /* Enable vertical scrolling */
+    border-radius: 0; /* No radius */
+    font-family: var(--font-family-monospace); /* Monospace for logs */
+    font-size: 0.8em;
+    line-height: 1.6;
+    color: var(--color-text-muted); /* Default log color */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-text) var(--color-bg);
+}
+/* Webkit scrollbar styles */
+#status::-webkit-scrollbar { width: 8px; height: 8px; }
+#status::-webkit-scrollbar-track { background: var(--color-bg); border-radius: 4px; }
+#status::-webkit-scrollbar-thumb { background-color: var(--color-text); border-radius: 4px; }
+#status::-webkit-scrollbar-thumb:hover { background-color: var(--color-button-hover-bg); }
+
+/* Individual log entry styles */
+.log-entry {
+    padding: 1px 2px;
+    margin-bottom: 2px; /* Small gap between entries */
+}
+.log-entry.success { color: var(--color-success); }
+.log-entry.error { color: var(--color-danger); font-weight: 700; }
+.log-entry.warning {
+    background-color: var(--color-warning-bg);
+    border-radius: 2px;
+    color: var(--color-warning);
+}
+.log-entry.info { color: var(--color-text); } /* Slightly darker than default muted */
+
+
+/* ==========================================================================
+   Code Snippet Modal (get_images.html)
+   ========================================================================== */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.6); /* Black background with opacity */
+}
+
+.modal-content {
+    background-color: var(--color-surface);
+    margin: 10% auto; /* Centered with top margin */
+    padding: var(--spacing-lg);
+    border: none;
+    width: 80%;
+    max-width: 900px; /* Max width */
+    border-radius: var(--border-radius);
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2); /* Subtle shadow */
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-upload-bg); /* Light separator */
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.modal-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.close-button { /* Close button (X) */
+    color: var(--color-text-muted);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0 5px;
+    line-height: 1;
+}
+.close-button:hover,
+.close-button:focus {
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.modal-body {
+    position: relative; /* Needed for absolute positioning of copy button */
+}
+
+.modal-code-container { /* Container for the <pre><code> block */
+    background-color: var(--color-upload-bg);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    max-height: 60vh; /* Limit height */
+    overflow-y: auto;
+    white-space: pre-wrap; /* Wrap long lines */
+    word-wrap: break-word;
+    font-family: var(--font-family-monospace);
+    font-size: 0.75em; /* Slightly smaller font for code */
+    color: var(--color-text);
+    position: relative; /* Needed for copy button */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-text) var(--color-upload-bg);
+}
+/* Webkit scrollbar styles */
+.modal-code-container::-webkit-scrollbar { width: 8px; height: 8px; }
+.modal-code-container::-webkit-scrollbar-track { background: var(--color-upload-bg); border-radius: 4px; }
+.modal-code-container::-webkit-scrollbar-thumb { background-color: var(--color-text); border-radius: 4px; }
+.modal-code-container::-webkit-scrollbar-thumb:hover { background-color: var(--color-button-hover-bg); }
+
+/* Copy Code Button inside Modal */
+.copy-code-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 5;
+    background-color: var(--color-button-bg);
+    color: var(--color-button-text);
+    border: none;
+    border-radius: 3px;
+    font-size: 0.8em; /* Smaller font size */
+    line-height: 1.3;
+    padding: 3px 8px; /* Adjust padding */
+    font-weight: 500;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    opacity: 1;
+    transition: background-color 0.15s ease-in-out;
+}
+.copy-code-button:hover:not(:disabled) {
+    background-color: var(--color-button-hover-bg);
+}
+/* Prevent visual shift on click */
+.copy-code-button:active {
+    transform: none !important;
+    background-color: var(--color-button-hover-bg); /* Maintain hover state color */
+    border: none;
+}
+.copy-code-button:disabled { /* Disabled state for copy button */
+     background-color: #adb5bd !important;
+     color: #fff !important;
+     opacity: 0.6;
+     cursor: not-allowed;
+}
+
+/* Error message display within the modal */
+#modalError {
+    color: var(--color-danger);
+    background-color: rgba(220, 53, 69, 0.1); /* Light red background */
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-top: var(--spacing-md);
+    border-radius: var(--border-radius);
+    font-size: 0.9em;
+    display: none; /* Hidden by default */
+}
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+.hidden {
+    display: none !important; /* Utility class to hide elements */
+}

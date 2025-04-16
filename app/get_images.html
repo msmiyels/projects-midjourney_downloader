@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Images & Code Snippets</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href='https://fonts.googleapis.com/css?family=Work+Sans:400,500,700' rel='stylesheet' type='text/css'>
+</head>
+<body>
+    <header id="appHeader">
+         <div class="container">
+             <h1 id="mainTitle">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                 MidJourney Downloader Suite
+             </h1>
+             <hr>
+             <nav id="toolNavigation">
+                 <a href="index.html" class="nav-button">Start</a>
+                 <a href="get_images.html" class="nav-button active">Get Images</a>
+                 <a href="file_download.html" class="nav-button">Downloader</a>
+             </nav>
+         </div>
+    </header>
+
+    <main>
+        <div class="container module-content">
+             <h2>Get Images & Code Snippets</h2>
+             <p>Here you'll find useful code snippets that you can run directly in your browser's developer console on the Midjourney website to extract image URLs and prompts.</p>
+             <p>Click a button to view and copy the code:</p>
+
+             <div id="codeSnippetButtons" style="margin-top: var(--spacing-lg); display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                 <button id="showManualCodeBtn" class="button" data-script-path="js/midjourney/get_manual_mode.js" data-title="Manual Export Code">
+                     Manual Export
+                 </button>
+                 <button id="showAutoCodeBtn" class="button" data-script-path="js/midjourney/get_with_auto_scrolling.js" data-title="Auto-Scroll Export Code">
+                     Auto-Scroll Export
+                 </button>
+             </div>
+
+             <hr style="margin-top: var(--spacing-lg); margin-bottom: var(--spacing-lg);">
+
+             <p>After generating a CSV file using the snippets above, go to the <a href="file_download.html">Downloader</a> to prepare the file and download the images.</p>
+        </div>
+    </main>
+
+    <div id="codeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle" class="modal-title">Code Snippet</h3>
+                <button id="closeModalBtn" class="close-button" title="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-code-container">
+                    <button id="copyCodeBtn" class="copy-code-button" title="Copy Code">Copy</button>
+                    <pre><code id="modalCodeContent">Loading code...</code></pre>
+                </div>
+                <p id="modalError"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
