@@ -1,4 +1,4 @@
-# Download YouTube Channel and Playlist Information
+# Download MidJourney Metadata and Download Images
 
 
 ## Motivation 🏴‍☠️
