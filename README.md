@@ -9,7 +9,7 @@ created images in bulk processing, making it available for organization and anal
 
 Getting all images or information alongside the generations such as prompts and model versions is simple, but 
 not yet a trivial click-and-run adventure. The initial idea/code was published by the YouTube channel
-[AI Revolution Zone](https://www.youtube.com/watch?v=0lCtou4TfII&t=5s), but is outdated and does not work with
+[AI Revolution Zone](https://www.youtube.com/@airevolutionzone), but is outdated and does not work with
 the current MidJourney version (as of 2025/04/01 - no joke here 😂).
 
 ## Overview 🧰
