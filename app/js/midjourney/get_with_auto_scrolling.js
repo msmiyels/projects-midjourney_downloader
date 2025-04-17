@@ -520,8 +520,8 @@
      log('log', "- Ensure you are on your Midjourney gallery/archive page.");
      log('log', "- Run 'midjourneyExporter.start()' in the console to begin.");
      log('log', "- Run 'midjourneyExporter.stop()' to stop early (will generate CSV).");
-	   log('log', "- Run 'midjourneyExporter.generate()' to generate CSV if stopped manually.");
-		 log('log', "- Run 'midjourneyExporter.generate()' to generate CSV if you used 'stopWithoutCsv()'.");
+	 log('log', "- Run 'midjourneyExporter.generate()' to generate CSV if stopped manually.");
+     log('log', "- Run 'midjourneyExporter.generate()' to generate CSV if you used 'stopWithoutCsv()'.");
      log('log', "- Run 'midjourneyExporter.toggleDebug()' to see more detailed logs.");
      log('log', "--------------------------------------------------");
 

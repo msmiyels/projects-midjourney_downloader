@@ -5,7 +5,7 @@
              Midjourney page in the browser and downloads it as a CSV file.
 
     Usage:   Paste this entire script into your browser's developer console and execute it
-             while viewing your Midjourney job history (e.g., /app/archive or /app/users/<your_id>).
+             while viewing your Midjourney job history (https://www.midjourney.com/imagine).
 
     Notes:   DOM selectors may need updates if Midjourney changes its website structure.
 */

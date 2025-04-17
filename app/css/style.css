@@ -24,6 +24,10 @@
     --color-warning-bg: #ffc107;
     --color-danger: #dc3545;
     --color-info: var(--color-accent);
+    --color-links-text: var(--color-text);
+    --color-links-bg: var(--color-warning-bg);
+    --color-links-hover-text: var(--color-text-on-dark);
+    --color-links-hover-bg: #0056CC;
 
     /* Typography */
     --font-family-sans: 'Work Sans', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
@@ -135,9 +139,14 @@ body {
     color: var(--color-text);
     border-bottom: none;
     padding-bottom: 0;
-    margin-top: 0;
+    margin-top: var(--spacing-lg);
     margin-bottom: var(--spacing-lg);
     line-height: 1.4;
+}
+
+/* Remove top margin from the very first H2 inside its parent within .module-content */
+.module-content h2:first-of-type {
+    margin-top: 0;
 }
 
 /* Module H3 Styles */
@@ -576,4 +585,23 @@ progress::-moz-progress-bar {
    ========================================================================== */
 .hidden {
     display: none !important; /* Utility class to hide elements */
+}
+
+/* Style for links within module paragraphs to match inline code appearance */
+.module-content a {
+    background-color: var(--color-links-bg);    /* Yellow background (like warning) */
+    color: var(--color-links-text);             /* Black text (like warning) */
+    padding: 0.15em 0.4em;                      /* Padding (like code) */
+    border-radius: var(--border-radius);        /* Rounded corners (like code) */
+    text-decoration: none;                      /* Remove default underline */
+    /* font-family: inherit; */                 /* Keep paragraph font (don't use monospace) */
+    /* font-size: inherit; */                   /* Keep paragraph font size */
+    transition: background-color 0.15s ease-in-out; /* Smooth hover effect */
+}
+
+/* Optional: Hover effect for these links */
+.module-content a:hover {
+    background-color: var(--color-links-hover-bg);      /* Slightly lighter background on hover */
+    color: var(--color-links-hover-text);               /* Keep text white on hover */
+    /* text-decoration: underline; */                   /* Optionally add underline ONLY on hover if desired */
 }

@@ -25,9 +25,26 @@
 
     <main>
         <div class="container module-content">
-             <h2>Get Images & Code Snippets</h2>
+             <h2>Get Images</h2>
              <p>Here you'll find useful code snippets that you can run directly in your browser's developer console on the Midjourney website to extract image URLs and prompts.</p>
-             <p>Click a button to view and copy the code:</p>
+             <p>There are two modes:</p>
+             <p>The <b>manual</b> mode is for users that have a small number of images or want to download only particular ones. The issue here is, that
+             only the <b>last</b> loaded images - those displayed on screen - will be extracted. The <b>auto-scroll</b>, however, starts at the beginning of the curser's position,
+             scrolls down automatically and collects all the images during that process. Since it actually is an automated version of the <b>manual</b> way, there will be some
+             duplicates captured due to overlap when scrolling down. Those will be handled with the downloader tool, so you <b>won`t have any duplicate images or metadata at the end</b>.</p>
+            <p>Now, how to?</p>
+            <ol>
+                <li>Choose one of the methods and copy the code</li>
+                <li>Go to <a href="https://www.midjourney.com" target="_blank" rel="noopener noreferrer">MidJourney</a> and login. That's it, your're good to go</li>
+                <li>Navigate to the <a href="https://www.midjourney.com/imagine" target="_blank" rel="noopener noreferrer">Imagine</a> page<br>
+                    Ensure you have a view that has 4 images in a row and the prompt and other info to it's right<br>
+                    <b>It will not work otherwise</b></li>
+                <li>Open the browser's console in the development view</li>
+                <li>Paste the code into the console</li>
+            </ol>
+            <p>Further documentation for usage is stated in the very first section of the provided scripts.</p>
+
+            <p>Click a button to view and copy the code:</p>
 
              <div id="codeSnippetButtons" style="margin-top: var(--spacing-lg); display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
                  <button id="showManualCodeBtn" class="button" data-script-path="js/midjourney/get_manual_mode.js" data-title="Manual Export Code">
@@ -39,8 +56,7 @@
              </div>
 
              <hr style="margin-top: var(--spacing-lg); margin-bottom: var(--spacing-lg);">
-
-             <p>After generating a CSV file using the snippets above, go to the <a href="file_download.html">Downloader</a> to prepare the file and download the images.</p>
+            <p>After generating a CSV file using the snippets above, go to the <b>Downloader</b> to prepare the file and download the images.</p>
         </div>
     </main>
 
