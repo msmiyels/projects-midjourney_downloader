@@ -22,7 +22,7 @@
 
     const CONFIG = {
         scrollElementSelector: "#pageScroll",
-        waitAfterScrollMs: 1500,
+        waitAfterScrollMs: 250,
         scrollAmountFactor: 0.8,
         maxChecksWithoutNew: 10,
         maxChecksNearScrollEnd: 5,
