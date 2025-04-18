@@ -805,9 +805,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
              // --- End Filename Generation ---
 
-            // Update progress text before starting download
-            if(progressText) progressText.textContent = `(${i + 1}/${imageData.length})`;
-
             // --- Image Download ---
             try {
                 await downloadImage(imageUrl, filename);
