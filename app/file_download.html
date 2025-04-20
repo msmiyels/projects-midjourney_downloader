@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MidJourney File Downloader & Prep</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link href='https://fonts.googleapis.com/css?family=Work+Sans:400,500,700' rel='stylesheet' type='text/css'>
-</head>
+    <link rel="stylesheet" href="css/style.css"> <link href='https://fonts.googleapis.com/css?family=Work+Sans:400,500,700' rel='stylesheet' type='text/css'>
+    </head>
 <body>
     <header id="appHeader">
          <div class="container">
@@ -26,12 +25,7 @@
     <main>
          <div id="moduleDownloadImages" class="container module-content">
              <h2>Data Preparation & Image Download</h2>
-             <p>Upload your <strong>original</strong> Midjourney CSV file (requires <code>url</code> column
-                 for deduplication; <code>job_id</code> for file naming). It uses a modified <code>download_url</code>
-                 which links to the larger scaled image. If not present, it will be generated otherwise.
-                 Afterwards, you can save the cleaned CSV or start the image download.</p>
-             <p>Depending on your browser and settings, you may have to allow your browser to download files from
-             this website into a specific directory, so that you do not need to agree on every single file.</p>
+             <p>Upload your Midjourney CSV file. The tool performs deduplication based on the <code>url</code> column and prepares a <code>download_url</code> for fetching images. Use the filters below to customize your download.</p>
 
             <h3>File Upload</h3>
             <input type="file" id="csvFileInput" accept=".csv" class="hidden">
@@ -47,16 +41,36 @@
                    <span class="input-hint">(Drag & Drop)</span>
                </div>
             </div>
+
              <div id="fileNameDisplay"></div>
-
-              <div id="controls" class="hidden">
-                   <button id="processButton" class="button">Start Download</button>
-                   <button id="saveCsvButton" class="button">Save Cleaned CSV</button>
-                   <button id="pauseResumeButton" class="button hidden">Pause</button>
-                   <button id="stopButton" class="button hidden">Stop</button>
-              </div>
-
-              <div id="progressContainer" class="hidden">
+             <div id="controls" class="hidden">
+                 <h3>Options</h3>
+                 <div class="filter-controls hidden">
+                        <div class="filter-group-left">
+                            <div class="filter-section">
+                                 <label for="urlColumnSelect">Use URL from Column:</label>
+                                 <select id="urlColumnSelect">
+                                     <option value="" disabled selected>Processing file...</option>
+                                 </select>
+                            </div>
+                            <div class="filter-section">
+                                 <label for="rowLimitInput">Download Limit (Max Rows):</label>
+                                 <input type="number" id="rowLimitInput" min="1" placeholder="all">
+                            </div>
+                        </div>
+                        <div class="filter-section filter-section-action">
+                            <label>Filter by Action:</label>
+                            <div id="actionFilterContainer"></div>
+                        </div>
+                        </div>
+                  <div class="main-controls">
+                       <button id="processButton" class="button">Start Download</button>
+                       <button id="saveCsvButton" class="button">Save Cleaned CSV</button>
+                       <button id="pauseResumeButton" class="button hidden">Pause</button>
+                       <button id="stopButton" class="button hidden">Stop</button>
+                  </div>
+                  </div>
+             <div id="progressContainer" class="hidden">
                 <progress id="downloadProgress" value="0" max="100"></progress>
                 <div id="progressText" class="info"></div>
               </div>

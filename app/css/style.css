@@ -24,10 +24,8 @@
     --color-warning-bg: #ffc107;
     --color-danger: #dc3545;
     --color-info: var(--color-accent);
-    --color-links-text: var(--color-text);
-    --color-links-bg: var(--color-warning-bg);
-    --color-links-hover-text: var(--color-text-on-dark);
-    --color-links-hover-bg: #0056CC;
+    --color-links-text: var(--color-text-on-dark);
+    --color-links-bg: #0056CC;
 
     /* Typography */
     --font-family-sans: 'Work Sans', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
@@ -242,6 +240,179 @@ body {
 }
 
 /* ==========================================================================
+   Filter Controls (Downloader Page - Flex Row Wrap Layout)
+   ========================================================================== */
+
+/* Container specifically for filter options */
+.filter-controls {
+    display: flex;              /* Arrange items horizontally */
+    flex-direction: row;
+    flex-wrap: wrap;            /* Allow items to wrap to the next line */
+    gap: var(--spacing-md);     /* Gap between left group and action filter group */
+    /*padding: var(--spacing-md);*/
+    border-radius: var(--border-radius);
+    width: 100%;
+    background-color: var(--color-bg); /* Match upload area background */
+    box-sizing: border-box;
+    align-items: stretch;    /* Align tops of wrapped items */
+    min-height: 120px;
+}
+
+/* Wrapper group for URL and Limit filters */
+.filter-group-left {
+    display: flex;
+    flex-direction: column;    /* Stack URL and Limit vertically inside this group */
+    gap: var(--spacing-md);    /* Space between URL and Limit sections */
+    flex: 1 1 300px;           /* Allow growing/shrinking, base width 300px */
+    min-width: 250px;          /* Minimum width before this group might wrap */
+    background-color: var(--color-upload-bg);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+}
+
+.filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    border-radius: var(--border-radius);
+}
+
+/* Specific class for the Action filter section for layout control */
+.filter-section-action {
+    flex: 1 1 300px;           /* Allow growing/shrinking, base width 300px */
+    min-width: 250px;          /* Minimum width before this section wraps */
+    background-color: var(--color-upload-bg);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-upload-bg);
+}
+
+/* Label styling remains the same */
+.filter-section label {
+    font-weight: 500;
+    font-size: 0.9em;
+    margin-bottom: 0;
+    display: block;
+}
+
+/* Control styling (select, input) remains the same */
+.filter-section select,
+.filter-section input[type="number"] {
+    background-color: var(--color-button-bg);
+    color: var(--color-button-text);
+    border: 1px solid var(--color-button-bg);
+    padding: 0.4rem 0.8rem;
+    height: auto;
+    line-height: normal;
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 350px;
+    box-sizing: border-box;
+}
+
+/* Container for action filter buttons */
+#actionFilterContainer {
+     margin-top: 0;
+     display: flex;
+     flex-wrap: wrap;
+     gap: var(--spacing-sm);
+}
+
+/* Action filter button styling (Default / Inactive State) */
+.action-filter-button {
+    padding: 3px 8px;
+    font-size: 0.8em;
+    background-color: var(--color-upload-bg);
+    color: var(--color-text-muted);
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+    font-weight: 400;
+}
+
+/* Hover state for action filter buttons */
+.action-filter-button:hover {
+    background-color: var(--color-upload-hover-bg);
+    border-color: #aaa;
+    color: var(--color-text);
+}
+
+/* Active state for action filter buttons */
+.action-filter-button.active {
+    background-color: var(--color-button-bg);
+    color: var(--color-button-text);
+    border-color: var(--color-button-bg);
+    font-weight: 500;
+}
+
+
+/* Main controls container remains the same */
+.main-controls {
+     display: flex;
+     gap: var(--spacing-md);
+     flex-wrap: wrap;
+     width: 100%;
+}
+
+/* ==========================================================================
+   Filter Controls Styling Adjustment (Match Buttons)
+   ========================================================================== */
+
+/* Target the select dropdown specifically */
+.filter-section select#urlColumnSelect,
+.filter-section input[type="number"]#rowLimitInput {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-input-border, #ccc);
+    /* Common Styles */
+    padding: 0.4rem 0.8rem;
+    height: auto;
+    line-height: normal;
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 350px;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    /* Allow Browser's Default Styling */
+    appearance: auto;
+    -webkit-appearance: auto;
+    -moz-appearance: auto;
+}
+
+/* Style Placeholder Specifically for the Number Input */
+.filter-section input[type="number"]#rowLimitInput::placeholder {
+    color: var(--color-text-muted, #6c757d); /* Standard Placeholder Farbe */
+    opacity: 1;
+}
+
+/* Apply Default Focus on both */
+.filter-section select#urlColumnSelect:focus,
+.filter-section input[type="number"]#rowLimitInput:focus {
+    border-color: var(--color-primary-accent);
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-accent-rgb, 37, 99, 235), 0.3);
+}
+
+/* Standard Option Styling */
+.filter-section select#urlColumnSelect option {
+     background-color: initial;
+     color: initial;
+}
+
+/* Add Custom Arrow ONLY to the select dropdown */
+.filter-section select#urlColumnSelect {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%2310100D" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    background-size: 0.8em;
+    padding-right: 2.5rem;
+}
+
+/* ==========================================================================
    Controls (Buttons)
    ========================================================================== */
 #controls {
@@ -271,6 +442,17 @@ body {
     background-color: var(--color-button-hover-bg);
 }
 /* Specific button IDs don't need extra styles unless different from .button */
+
+/* style.css (am Ende hinzufügen) */
+
+#controls > h3 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#controls > .filter-controls {
+   margin-top: 0;
+}
 
 #pauseResumeButton { /* Pause/Resume specific styling */
     background-color: var(--color-upload-bg); /* Lighter background */
@@ -369,6 +551,7 @@ progress::-moz-progress-bar {
     scrollbar-width: thin; /* Firefox scrollbar */
     scrollbar-color: var(--color-text) var(--color-upload-bg); /* Firefox scrollbar */
 }
+
 /* Webkit scrollbar styles */
 #promptDisplayArea::-webkit-scrollbar { width: 8px; height: 8px; }
 #promptDisplayArea::-webkit-scrollbar-track { background: var(--color-upload-bg); border-radius: 4px; }
@@ -597,11 +780,4 @@ progress::-moz-progress-bar {
     /* font-family: inherit; */                 /* Keep paragraph font (don't use monospace) */
     /* font-size: inherit; */                   /* Keep paragraph font size */
     transition: background-color 0.15s ease-in-out; /* Smooth hover effect */
-}
-
-/* Optional: Hover effect for these links */
-.module-content a:hover {
-    background-color: var(--color-links-hover-bg);      /* Slightly lighter background on hover */
-    color: var(--color-links-hover-text);               /* Keep text white on hover */
-    /* text-decoration: underline; */                   /* Optionally add underline ONLY on hover if desired */
 }
