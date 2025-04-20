@@ -29,7 +29,7 @@ Results will be saved as `.csv`
 
 ## Hands-on 🚀
 ### Website
-The easiest way to use the tool is by visiting the respective [GitHub Pages Site](https://msmiyels.github.io/projects-mj_downloader/),
+The easiest way to use the tool is by visiting the respective [GitHub Pages Site](https://msmiyels.github.io/projects-midjourney_downloader/),
 follow the instructions there and have fun 🎉.
 
 ### Running the tools locally
