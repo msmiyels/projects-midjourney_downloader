@@ -33,7 +33,7 @@ The easiest way to use the tool is by visiting the respective [GitHub Pages Site
 follow the instructions there and have fun 🎉.
 
 ### Running the tools locally
-1. Clone the repository: `git clone https://github.com/msmiyels/projects-mj_downloader.git`
+1. Clone the repository: `git clone https://github.com/msmiyels/projects-midjourney_downloader.git`
 2. Navigate to the `app/` subdirectory, located in the cloned repository root 
 3. Open the `index.html` file in your browser
 4. Follow the instructions on the page
