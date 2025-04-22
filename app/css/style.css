@@ -45,6 +45,10 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+html {
+    overflow-y: scroll;
+}
+
 body {
     font-family: var(--font-family-sans);
     font-size: var(--base-font-size);
@@ -70,10 +74,33 @@ body {
     box-shadow: none;
     border-radius: 0;
 }
+.header-title-area {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+.github-link {
+    display: flex;
+    align-items: center;
+    color: #10100D;
+    transition: color 0.2s, background 0.2s;
+    text-decoration: none;
+    margin-left: 1.5rem;
+    border-radius: 50%;             /* For circular background */
+    padding: 2px;                   /* Optional: ensures background shows around icon */
+}
+.github-link:hover, .github-link:focus {
+    color: #fff;                  
+    background: #10100D;         
+    border-radius: 50%;             /* keep it round */
+    outline: none;
+}
+
 #mainTitle {
     font-size: 1.75rem;
     font-weight: 700;
-    margin: 0 0 var(--spacing-md) 0;
+    margin: 0 0 0 0;
     padding: 0;
     border-bottom: none;
     display: flex;
