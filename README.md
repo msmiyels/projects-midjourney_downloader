@@ -1,5 +1,16 @@
-# Download MidJourney Metadata and Download Images
+# MidJourney Downloader Suite
 
+<!-- badges -->
+<p align="center">Easily bulk download all your MidJourney AI generated images and associated prompts</p>
+
+<p align="center">
+    <img src="https://img.shields.io/badge/JavaScript-Language?style=flat&label=Language&color=F7DF1E" alt="Language"/>
+    <img src="https://img.shields.io/website?&url=https%3A%2F%2Fmsmiyels.github.io%2Fprojects-midjourney_downloader%2F&up_color=green&down_color=dc3545&logo=github&label=GitHub%20Pages&up_message=Up&down_message=Down" alt="Website"/>
+    <a href="https://github.com/msmiyels/projects-midjourney_downloader?tab=MIT-1-ov-file">
+    <img src="https://img.shields.io/github/license/msmiyels/projects-midjourney_downloader?style=flat&label=License&color=0056cc" alt="License"/>
+    </a>    
+</p>
+<!-- /badges -->
 
 ## Motivation 🏴‍☠️
 
@@ -26,6 +37,10 @@ It extracts:
 - Additional tags such as ar, chaos, niji, style, stylize etc. in separate columns
 
 Results will be saved as `.csv`
+
+Post extraction, the downloader can be used to obtain the images. 
+This tool will also handle duplicates (so you won't get any duplicate images or metadata at the end).
+Additionally, the tool offers filtering capabilities to download only specific images by actions such as 'remix', 'upscale', or 'zoom' if available in the CSV.
 
 ## Hands-on 🚀
 ### Website
