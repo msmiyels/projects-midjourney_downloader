@@ -1,5 +1,3 @@
-// --- script.js ---
-
 /*
      @fileoverview Main script handling UI interactions and data processing
      for different HTML pages (get_images.html, file_download.html),

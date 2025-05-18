@@ -1,0 +1,468 @@
+/* popup.css - Styles for the Midjourney Scraper & Processor extension popup */
+/* Version incorporates compact layout with tabs inside .popup-container - MINIMAL CHANGES */
+
+/* Define root variables for colors, fonts, and spacing */
+:root {
+    --color-bg: #F5F5F5; /* Light grey background for the popup body */
+    --color-surface: #FFFFFF; /* White background for elements like the status area */
+    --color-text: #10100D; /* Dark primary text color */
+    --color-text-muted: #555555; /* Grey color for secondary text */
+    --color-button-bg: #10100D; /* Dark background for the main button */
+    --color-button-text: #FFFFFF; /* White text for the main button */
+    --color-button-hover-bg: #333333; /* Darker grey for button hover state */
+    --color-stop-button-bg: #ffc107; /* Yellow background for the stop button */
+    --color-stop-button-hover-bg: #e0a800; /* Darker yellow for stop button hover */
+    --color-download-button-bg: #0d6efd; /* Blue background for the download button */
+    --color-download-button-hover-bg: #0a58ca; /* Darker blue for download button hover */
+    --color-upload-button-bg: #198754; /* Green background for upload button */
+    --color-upload-button-hover-bg: #157347; /* Darker green for upload button hover */
+    --color-disabled-bg: #adb5bd; /* Grey background for disabled buttons */
+    --color-disabled-text: #FFFFFF; /* White text for disabled buttons */
+    --color-separator: #dee2e6; /* Color for the horizontal rule */
+    --color-filter-bg: #e9ecef; /* Light background for the filter area */
+    --color-accent: #10100D; /* Accent color for links */
+    --color-warning-bg: #ffc107; /* Base yellow for warnings */
+    --color-partial-info-bg: #FFFEE0; /* Sehr helles Gelb */
+    --color-partial-info-border: #F0AD4E; /* Leicht dunklerer Rand */
+    --color-notice-border: #6c757d; /* Ein neutrales Grau */
+    --border-radius: 4px; /* Standard border radius for elements */
+    --spacing-xs: 0.25rem; /* Extra small spacing (4px) */
+    --spacing-sm: 0.5rem; /* Small spacing unit (8px) */
+    --spacing-md: 1rem; /* Medium spacing unit (16px) */
+    --font-family-sans: 'Work Sans', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+}
+
+.status-log.status-partial-info {
+    background-color: var(--color-surface);   /* Standard-Hintergrund (z.B. Weiß) */
+    
+    /* Spezieller linker Rand: dick und im gewünschten Gelb */
+    border-width: 2px;                   /* Die gewünschte Breite */
+    border-style: solid;
+    border-color: var(--color-stop-button-bg); /* Das Gelb vom Warning-Hintergrund */
+    
+    /* Beibehaltung anderer wichtiger Standard-Styles von .status-log */
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm);
+    color: var(--color-text);
+    text-align: center;
+    font-size: 0.85em;
+    margin: 0;
+
+    /* Übergangseffekte, falls gewünscht (angepasst von .status-log) */
+    transition: background-color 0.2s ease-in-out, 
+                border-top-color 0.2s ease-in-out,
+                border-right-color 0.2s ease-in-out,
+                border-bottom-color 0.2s ease-in-out,
+                border-left-color 0.2s ease-in-out;
+}
+
+.status-log.status-partial-info p {
+    color: var(--color-text);
+}
+
+/* Basic body styling for the popup window */
+body {
+    font-family: var(--font-family-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    margin: 0;
+    width: 320px;
+    min-height: 150px;
+    /* Padding is now handled by .popup-container */
+}
+
+/* Apply border-box sizing to all elements for consistent layout */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Styling for the main container within the popup */
+.popup-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm); /* Gap between direct children */
+    padding: var(--spacing-md); /* Padding on all sides */
+}
+
+/* Styling for the main heading (H1) */
+h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-xs) 0;
+    text-align: center;
+}
+
+/* --- Styles for Imagine Link --- */
+.imagine-link-container {
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+    margin-top: calc(-0.5 * var(--spacing-sm));
+}
+
+.imagine-link-container a {
+    font-size: 0.85em;
+    color: var(--color-accent);
+    text-decoration: none;
+    padding: 2px 4px;
+    border-radius: var(--border-radius);
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.imagine-link-container a:hover {
+    background-color: var(--color-accent);
+    color: var(--color-button-text);
+    text-decoration: none;
+}
+
+
+/* --- Styles for Tab Navigation --- */
+.tab-nav {
+    display: flex;
+    border-bottom: 1px solid var(--color-separator);
+    /* No margin-bottom needed, gap from popup-container handles it */
+}
+
+.tab-button {
+    flex: 1;
+    padding: var(--spacing-sm) 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color 0.15s ease-in-out, border-bottom-color 0.15s ease-in-out;
+    margin-bottom: -1px;
+    user-select: none;
+}
+
+.tab-button:hover {
+    color: var(--color-text);
+}
+
+.tab-button.active {
+    color: var(--color-text);
+    font-weight: 700;
+    border-bottom-color: var(--color-button-bg);
+}
+
+
+/* Styling for individual tab content panes */
+.tab-content {
+    display: none; /* Hide inactive tabs by default */
+    flex-direction: column;
+    /* Apply smaller gap consistently to ALL tabs */
+    gap: var(--spacing-sm);
+    /* Padding inherited from .popup-container */
+}
+
+.tab-content.active {
+    display: flex; /* Show active tab content */
+}
+
+/* Style the description paragraphs inside tabs */
+#scraperControlsContainer > p,
+#tabContentDownloader > p {
+    text-align: center;
+    font-size: 0.9em;
+    color: var(--color-text-muted);
+    margin: 0; /* Remove default margins */
+    padding: 0;
+}
+
+
+/* --- Styles for Scraper Wrong Page Message --- */
+#scraperWrongPageMsg {
+    border: 1px solid var(--color-warning-bg);
+    background-color: var(--color-stop-button-bg); /* User desired background kept */
+    color: var(--color-text);
+    text-align: center;
+    padding: var(--spacing-sm); /* Consistent padding */
+    border-radius: var(--border-radius);
+    margin: 0; /* Remove default margin */
+}
+#scraperWrongPageMsg p {
+    margin: 0;
+    font-size: 0.9em;
+    color: inherit;
+}
+#scraperWrongPageMsg a {
+    color: var(--color-accent);
+    font-weight: 500;
+    text-decoration: underline;
+    background: none;
+    padding: 0;
+}
+#scraperWrongPageMsg a:hover {
+    color: var(--color-button-hover-bg);
+    background: none;
+}
+
+/* Container for Scraper controls+status */
+#scraperControlsContainer {
+     display: flex;
+     flex-direction: column;
+     gap: var(--spacing-sm); /* Keep small gap here */
+     margin: 0;
+}
+
+/* General container for control buttons/inputs within sections */
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin: 0;
+    gap: var(--spacing-sm); /* Ensure gap for potential multiple elements */
+}
+
+/* Make scraper controls side-by-side */
+.scraper-controls {
+    flex-direction: row;
+    /* min-height: var(--controls-min-height); /* REMOVED */
+    align-items: center; /* Vertically center buttons in the row */
+}
+.scraper-controls > .button {
+    flex: 1;
+}
+
+/* General styling for all buttons */
+.button {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    background-color: var(--color-button-bg);
+    border: none;
+    color: var(--color-button-text);
+    border-radius: var(--border-radius);
+    transition: background-color 0.15s ease-in-out;
+    line-height: 1.2;
+}
+
+/* Hover state for enabled buttons */
+.button:hover:not(:disabled) {
+    background-color: var(--color-button-hover-bg);
+}
+
+/* Specific styling for the Stop button */
+.stop-button {
+    background-color: var(--color-stop-button-bg);
+    color: var(--color-text);
+}
+.stop-button:hover:not(:disabled) {
+    background-color: var(--color-stop-button-hover-bg);
+}
+
+/* Specific styling for the main Download button */
+.download-button {
+    background-color: var(--color-download-button-bg);
+}
+.download-button:hover:not(:disabled) {
+    background-color: var(--color-download-button-hover-bg);
+}
+
+/* Specific styling for the Upload button */
+.upload-trigger-button {
+     background-color: var(--color-upload-button-bg);
+}
+.upload-trigger-button:hover:not(:disabled) {
+     background-color: var(--color-upload-button-hover-bg);
+}
+
+/* Styling for disabled buttons */
+.button:disabled {
+     background-color: var(--color-disabled-bg) !important;
+     border: none;
+     color: var(--color-disabled-text) !important;
+     opacity: 0.65;
+     cursor: not-allowed;
+}
+
+/* Styling for the status log areas */
+.status-log {
+    margin: 0; /* Remove default margin, rely on parent gap */
+    padding: var(--spacing-sm);
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius);
+    font-size: 0.85em;
+    text-align: center;
+    border: 1px solid var(--color-separator);
+}
+
+/* Styling for paragraphs within the status log */
+.status-log p {
+    margin: 0.2rem 0;
+    color: var(--color-text); /* Default color for all status lines */
+}
+
+
+/* --- Styles for Upload Filters --- */
+
+/* Container for the filter controls */
+.filter-controls {
+    background-color: var(--color-bg);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    margin: 0; /* Remove default margin */
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm); /* Use consistent small gap */
+}
+
+/* Heading within the filter area */
+.filter-controls h3 {
+    font-size: 0.95em;
+    font-weight: 600;
+    margin: 0 0 var(--spacing-xs) 0;
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--color-separator);
+    text-align: center;
+    color: var(--color-text);
+}
+
+/* Styles for filter layout within Downloader Tab */
+.filter-group-left {
+     display: flex;
+     flex-direction: column;
+     gap: var(--spacing-sm);
+}
+
+.filter-section {
+     display: flex;
+     flex-direction: column;
+     gap: var(--spacing-xs); /* Reduced gap between label and control */
+}
+
+.filter-section label {
+     font-weight: 500;
+     font-size: 0.85em;
+     color: var(--color-text-muted);
+     margin: 0;
+     padding: 0;
+}
+
+.filter-section select,
+.filter-section input[type="number"] {
+     padding: var(--spacing-xs) var(--spacing-sm);
+     font-size: 0.9em;
+     border: 1px solid #ced4da;
+     border-radius: var(--border-radius);
+     background-color: var(--color-surface);
+     color: var(--color-text);
+     line-height: 1.3;
+     width: 100%;
+}
+.filter-section input[type="number"]::placeholder {
+     color: #adb5bd;
+}
+
+.filter-section-action {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+
+/* Container for action filter buttons */
+#actionFilterContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    padding-top: 0;
+}
+
+/* Placeholder text when no action filters are available */
+.no-filters-placeholder {
+    font-style: italic;
+    color: var(--color-text-muted);
+    font-size: 0.85em;
+}
+
+/* Individual action filter button styling */
+.action-filter-button {
+    padding: 2px 6px;
+    font-size: 0.8em;
+    background-color: var(--color-surface);
+    color: var(--color-text-muted);
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+    font-weight: 400;
+}
+.action-filter-button:hover {
+    background-color: #f8f9fa;
+    border-color: #aaa;
+    color: var(--color-text);
+}
+.action-filter-button.active {
+    background-color: var(--color-button-bg);
+    color: var(--color-button-text);
+    border-color: var(--color-button-bg);
+    font-weight: 500;
+}
+
+/* --- Separator and Download Area --- */
+hr.separator {
+    border: none;
+    border-top: 1px solid var(--color-separator);
+    margin: 0; /* Remove default margin */
+}
+
+.download-area {
+    margin: 0; /* Remove default margin */
+    /* Center the button */
+    display: flex;
+    justify-content: center;
+}
+.download-area > .button {
+    width: 100%; /* Make button full width */
+}
+
+
+/* Utility class to hide elements */
+.hidden {
+    display: none !important;
+}
+
+/* --- Styling for Status Log Backgrounds --- */
+
+/* Default is white (from .status-log background-color) */
+
+.status-log.status-warning {
+    background-color: var(--color-stop-button-bg); /* Use the stronger yellow */
+    border-color: var(--color-stop-button-hover-bg); /* Optional: darker border */
+    /* Ensure text is readable on yellow */
+    color: var(--color-text); /* Keep dark text */
+}
+.status-log.status-warning p {
+    color: var(--color-text); /* Ensure paragraphs inside also use dark text */
+}
+
+
+.status-log.status-error {
+    background-color: #f8d7da; /* Standard Bootstrap light red */
+    border-color: #f5c6cb; /* Standard Bootstrap light red border */
+    color: #721c24; /* Standard Bootstrap dark red text */
+}
+.status-log.status-error p {
+     color: #721c24; /* Ensure paragraphs inside also use dark red text */
+}
+
+.status-log {
+    margin: 0;
+    padding: var(--spacing-sm);
+    background-color: var(--color-surface); /* Default background */
+    border-radius: var(--border-radius);
+    font-size: 0.85em;
+    text-align: center;
+    border: 1px solid var(--color-separator);
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Add transition */
+}

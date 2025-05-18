@@ -1,0 +1,28 @@
+{
+    "manifest_version": 3,
+    "name": "Midjourney Scraper Extension",
+    "version": "0.1.0",
+    "description": "Starts auto-scrolling on Midjourney and collects image data.",
+    "permissions": [
+      "activeTab", // Required to interact with the current page via scripting API
+      "scripting", // Required to inject the content script
+      "downloads" // Required to trigger the CSV download
+    ],
+    "action": {
+      "default_popup": "popup.html", // Specifies the HTML file for the popup window
+      "default_icon": { // Optional: Placeholder for icons
+        "16": "icons/icon16.png"
+      }
+    },
+    "background": {
+      "service_worker": "background.js" // Specifies the background service worker script
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://*.midjourney.com/*"], // Defines which pages the content script runs on
+        "js": ["content.js"], // Specifies the content script file
+        "run_at": "document_idle" // Runs the script after the DOM is complete but before subresources like images load fully
+      }
+    ]
+  }
+  
