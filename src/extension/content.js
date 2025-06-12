@@ -65,10 +65,14 @@
     /* Removed custom log function - using console directly */
 
     /**
-     * Sends status updates to the background script.
-     * @param {string} statusMessage
-     * @param {number | null} [count=null]
-     * @param {boolean} [running=isRunning]
+     * Sends a status update message to the background script with the current scraping status, item count, and running state.
+     *
+     * @param {string} statusMessage - The status message to report.
+     * @param {number|null} [count=null] - Optional count of items; defaults to the current buffer length if not provided.
+     * @param {boolean} [running=isRunning] - Optional running state; defaults to the current running state.
+     *
+     * @remark
+     * Common connection errors are silently ignored if the background script or popup is not ready.
      */
     function sendStatusUpdate(statusMessage, count = null, running = isRunning) {
         // console.log(`${LOG_PREFIX} Sending status update: ${statusMessage}, Count: ${count}, Running: ${running}`); // Basic logging
@@ -94,7 +98,9 @@
     }
 
     /**
-     * Sends the collected data chunk to the background script.
+     * Sends the buffered scraped data and collected parameter names to the background script.
+     *
+     * Clears the data buffer before sending. Logs a warning if the background script does not acknowledge receipt.
      */
     function sendDataChunk() {
         if (intermediateData.length > 0) {
@@ -126,10 +132,12 @@
     // --- Data Extraction ---
 
     /**
-     * Extracts data from a single job container element.
-     * Stores PNG URL as 'url' and original WEBP URL as 'original_url'.
-     * @param {HTMLElement} jobContainer
-     * @param {string} containerId
+     * Extracts prompt text, action keyword, parameters, and image URLs from a job container element and buffers the data for later transmission.
+     *
+     * For each image found, stores an entry with the job ID, PNG URL, original WEBP URL, prompt, action, and parameters. If no images are present but other data exists, stores an entry with default image URLs.
+     *
+     * @param {HTMLElement} jobContainer - The DOM element representing a single job container.
+     * @param {string} containerId - A unique identifier for the job container.
      */
     function processContainer(jobContainer, containerId) {
         try {
@@ -255,7 +263,11 @@
     } // End processContainer
 
 
-    // ---- Auto-Scrolling Core Loop ----
+    /**
+     * Performs the main auto-scrolling and scraping loop, processing new job containers and sending data chunks until stop conditions are met.
+     *
+     * The loop scrolls the target element, waits, scans for new job containers, processes unprocessed containers, and buffers extracted data. It checks for stop conditions such as reaching the maximum number of iterations, encountering processing errors, finding no new elements after several checks, or reaching the scroll end with no new data. When a stop condition is met, the scraping process is halted and any remaining data is sent.
+     */
     function scrollAndProcessLoop() {
         if (!isRunning || !scrollableElement) {
             // console.log(`${LOG_PREFIX} Loop check: Stopping (isRunning false or scrollableElement missing).`); // Basic logging
@@ -355,8 +367,11 @@
     // ---- Control Functions ----
 
     /**
-     * Initializes and starts the scraping process.
-     * @returns {{status: string, message?: string} | undefined} - Returns status for listener, undefined otherwise
+     * Starts the automated scraping process by initializing state, verifying the scrollable element, and launching the scroll-and-process loop.
+     *
+     * @returns {{status: string, message?: string} | undefined} An object indicating the start status, or an error message if initialization fails.
+     *
+     * @remark If the scrollable element cannot be found or is not scrollable, the function alerts the user and returns an error status.
      */
     function startScraping() {
         if (isRunning) {
@@ -401,9 +416,12 @@
     }
 
     /**
-     * Stops the scraping process.
-     * @param {boolean} [finishedNaturally=false]
-     * @returns {{status: string}} // Return status for listener and internal use
+     * Stops the scraping process and performs cleanup.
+     *
+     * If the process is already stopped, sends a status update and returns an appropriate status. Otherwise, clears timeouts, updates the running state, sends any remaining buffered data, and issues a final status update after a short delay.
+     *
+     * @param {boolean} [finishedNaturally=false] - Indicates whether the process finished naturally or was manually stopped.
+     * @returns {{status: string}} An object indicating the stop status for use by listeners and internal logic.
      */
     function stopScraping(finishedNaturally = false) {
         // console.log(`${LOG_PREFIX} stopScraping called (finishedNaturally=${finishedNaturally}). Current isRunning state: ${isRunning}`); // Basic logging

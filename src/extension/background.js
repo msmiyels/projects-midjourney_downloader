@@ -12,18 +12,23 @@ let readyContentScripts = new Set();
 // --- Helper Functions --- (Keep existing helpers: log, deduplicateDataByOriginalURL, escapeCsvValueIfNeeded, alwaysQuoteCsvValue, generateCsvString, broadcastStatus)
 
 /**
- * Logs messages from the background script.
- * @param {'log' | 'warn' | 'error' | 'debug'} level
- * @param {...any} args
+ * Logs a message from the background script with a standardized "[Background]" prefix at the specified log level.
+ *
+ * @param {'log' | 'warn' | 'error' | 'debug'} level - The console log level to use.
+ * @param {...any} args - The message or data to log.
  */
 function log(level, ...args) {
     console[level]("[Background]", ...args);
 }
 
 /**
- * Deduplicates an array of data objects based on the 'original_url' key.
- * @param {Array<Object>} dataArray
- * @returns {Array<Object>}
+ * Returns a new array containing only the first occurrence of each object in the input array, deduplicated by the `original_url` property.
+ *
+ * @param {Array<Object>} dataArray - Array of objects to deduplicate.
+ * @returns {Array<Object>} Array of unique objects, each with a distinct `original_url`.
+ *
+ * @remark
+ * Items without a valid `original_url` property are skipped and not included in the result.
  */
 function deduplicateDataByOriginalURL(dataArray) {
     const uniqueMap = new Map();
@@ -44,9 +49,10 @@ function deduplicateDataByOriginalURL(dataArray) {
 }
 
 /**
- * Escapes a value for CSV. Quotes only if necessary.
- * @param {*} field
- * @returns {string}
+ * Escapes a value for inclusion in a CSV field, quoting only if the value contains commas, newlines, or double quotes.
+ *
+ * @param {*} field - The value to escape for CSV.
+ * @returns {string} The escaped CSV field as a string.
  */
 function escapeCsvValueIfNeeded(field) {
     if (field === null || field === undefined) { return '""'; }
@@ -58,9 +64,12 @@ function escapeCsvValueIfNeeded(field) {
 }
 
 /**
- * Always escapes and quotes a value for CSV.
- * @param {*} field
- * @returns {string}
+ * Converts a value to a CSV-safe string, always quoting and escaping as needed.
+ *
+ * Returns an empty quoted string for null or undefined values.
+ *
+ * @param {*} field - The value to convert for CSV output.
+ * @returns {string} The value as a quoted and escaped CSV field.
  */
 function alwaysQuoteCsvValue(field) {
     if (field === null || field === undefined) { return '""'; }
@@ -70,9 +79,10 @@ function alwaysQuoteCsvValue(field) {
 
 
 /**
- * Parses a single line of CSV text, respecting quoted fields.
- * @param {string} line The CSV line to parse.
- * @returns {Array<string>} An array of parsed values.
+ * Parses a single CSV line into an array of values, handling quoted fields and escaped quotes.
+ *
+ * @param {string} line - The CSV line to parse.
+ * @returns {Array<string>} An array of parsed field values with quotes and escapes properly handled.
  */
 function parseCsvLine(line) {
     const values = [];
@@ -100,10 +110,12 @@ function parseCsvLine(line) {
 
 
 /**
- * Extracts the filename (including extension) from a URL string.
- * Handles potential query parameters. Returns null if extraction fails.
- * @param {string} urlString The URL string.
- * @returns {string|null} The extracted filename or null.
+ * Extracts the filename with extension from a URL string, decoding any encoded characters.
+ *
+ * Returns null if the URL is invalid or no filename can be determined.
+ *
+ * @param {string} urlString - The URL to extract the filename from.
+ * @returns {string|null} The decoded filename, or null if extraction fails.
  */
 function extractFilenameFromUrl(urlString) {
     // This function implementation is based on the analysis and should be added
@@ -128,11 +140,12 @@ function extractFilenameFromUrl(urlString) {
 }
 
 /**
- * Modifies a filename according to the rule: keep parts before the third underscore.
- * Example: "0_1_640_N.png" -> "0_1.png"
- * Returns the original filename if modification is not possible or needed.
- * @param {string} originalFilename The original filename (e.g., "0_1_640_N.png").
- * @returns {string} The modified filename or the original if modification fails.
+ * Modifies a filename by retaining only the parts before the third underscore, preserving the file extension.
+ *
+ * For example, "0_1_640_N.png" becomes "0_1.png". If the filename does not contain at least two underscores or lacks an extension, the original filename is returned unchanged.
+ *
+ * @param {string} originalFilename - The filename to modify.
+ * @returns {string} The modified filename, or the original filename if the rule cannot be applied.
  */
 function modifyFilenameForRule(originalFilename) {
     // This function implements the specific logic requested
@@ -167,13 +180,19 @@ function modifyFilenameForRule(originalFilename) {
 }
 
 /**
- * Generates a CSV string from the appropriate data source (scraped or uploaded).
- * For scraped data: Adds 'download_url' immediately after 'url'.
- * The 'download_url' is the full original URL with its filename part modified based on the specific rule.
- * @param {'scraper' | 'upload'} source - Determines which data array to use.
- * @param {Array<string>} [actionFilters=[]] - Optional list of actions to filter by (for upload).
- * @param {number|null} [limit=null] - Optional row limit (for upload).
- * @returns {string} The CSV content as a string (including BOM).
+ * Generates a CSV string from either scraped or uploaded data, applying optional filters and formatting.
+ *
+ * For scraped data, inserts a 'download_url' column after 'url', where the filename is modified according to a specific rule. For uploaded data, supports filtering by URL column, action values, and row limit before generating the CSV.
+ *
+ * @param {Object} options - Configuration for CSV generation.
+ * @param {'scraper' | 'upload'} options.source - Selects the data source: scraped or uploaded.
+ * @param {Array<string>} [options.actionFilters] - Optional list of action values to filter uploaded data.
+ * @param {number|null} [options.limit] - Optional maximum number of rows to include (for uploaded data).
+ * @param {string} [options.urlColumn] - Name of the URL column to filter uploaded data.
+ * @returns {string} The generated CSV content as a string, including a BOM.
+ *
+ * @remark
+ * Returns only the BOM if no data or headers are available for the selected source.
  */
 function generateCsvString(options) {
     const source = options.source;
@@ -316,7 +335,9 @@ function generateCsvString(options) {
 
 
 /**
- * Sends the current status to the popup(s).
+ * Broadcasts the current scraping or upload status to the popup UI.
+ *
+ * Sends a message containing the current operation status, data counts, running state, and upload information (if available) to the popup. Handles cases where the popup is not open without interrupting execution.
  */
 function broadcastStatus() {
     const statusPayload = {
