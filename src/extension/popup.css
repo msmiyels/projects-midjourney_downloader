@@ -294,6 +294,7 @@ h1 {
     font-size: 0.85em;
     text-align: center;
     border: 1px solid var(--color-separator);
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Add transition */
 }
 
 /* Styling for paragraphs within the status log */
@@ -302,6 +303,15 @@ h1 {
     color: var(--color-text); /* Default color for all status lines */
 }
 
+/* Error state styling for status log */
+.status-log.status-error {
+    background-color: #f8d7da; /* Standard Bootstrap light red */
+    border-color: #f5c6cb; /* Standard Bootstrap light red border */
+    color: #721c24; /* Standard Bootstrap dark red text */
+}
+.status-log.status-error p {
+     color: #721c24; /* Ensure paragraphs inside also use dark red text */
+}
 
 /* --- Styles for Upload Filters --- */
 
@@ -444,25 +454,4 @@ hr.separator {
 }
 .status-log.status-warning p {
     color: var(--color-text); /* Ensure paragraphs inside also use dark text */
-}
-
-
-.status-log.status-error {
-    background-color: #f8d7da; /* Standard Bootstrap light red */
-    border-color: #f5c6cb; /* Standard Bootstrap light red border */
-    color: #721c24; /* Standard Bootstrap dark red text */
-}
-.status-log.status-error p {
-     color: #721c24; /* Ensure paragraphs inside also use dark red text */
-}
-
-.status-log {
-    margin: 0;
-    padding: var(--spacing-sm);
-    background-color: var(--color-surface); /* Default background */
-    border-radius: var(--border-radius);
-    font-size: 0.85em;
-    text-align: center;
-    border: 1px solid var(--color-separator);
-    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Add transition */
 }
