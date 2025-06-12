@@ -58,7 +58,7 @@ function escapeCsvValueIfNeeded(field) {
     if (field === null || field === undefined) { return '""'; }
     const stringField = String(field);
     if (stringField.includes(',') || stringField.includes('\n') || stringField.includes('"')) {
-         return `"${stringField.replace(/"/g, '""')}"`;
+        return `"${stringField.replace(/"/g, '""')}"`;
     }
     return stringField;
 }
@@ -102,7 +102,7 @@ function parseCsvLine(line) {
     return values.map(val => {
         let finalVal = val.trim();
         if (finalVal.length >= 2 && finalVal.startsWith('"') && finalVal.endsWith('"')) {
-           finalVal = finalVal.substring(1, finalVal.length - 1);
+            finalVal = finalVal.substring(1, finalVal.length - 1);
         }
         return finalVal.replace(/""/g, '"');
     });
@@ -131,7 +131,7 @@ function extractFilenameFromUrl(urlString) {
         }
         // Fallback if no slash found (e.g., domain relative path)
         if (pathname) {
-             return decodeURIComponent(pathname);
+            return decodeURIComponent(pathname);
         }
     } catch (e) {
         console.warn(`Could not extract filename from URL: ${urlString}`, e.message);
@@ -155,8 +155,8 @@ function modifyFilenameForRule(originalFilename) {
     try {
         const lastDotIndex = originalFilename.lastIndexOf('.');
         if (lastDotIndex === -1 || lastDotIndex === 0) {
-             // No extension or filename starts with a dot
-             return originalFilename; // Cannot apply rule without extension separation
+            // No extension or filename starts with a dot
+            return originalFilename; // Cannot apply rule without extension separation
         }
 
         const namePart = originalFilename.substring(0, lastDotIndex);
@@ -216,11 +216,11 @@ function generateCsvString(options) {
         const urlIndex = combinedHeaders.indexOf(URL_COLUMN_NAME);
 
         if (urlIndex > -1) {
-             combinedHeaders.splice(urlIndex + 1, 0, DOWNLOAD_URL_COLUMN_NAME);
+            combinedHeaders.splice(urlIndex + 1, 0, DOWNLOAD_URL_COLUMN_NAME);
         } else {
-             const promptIndex = combinedHeaders.indexOf('prompt');
-             if(promptIndex > -1) { combinedHeaders.splice(promptIndex, 0, DOWNLOAD_URL_COLUMN_NAME); }
-             else { combinedHeaders.push(DOWNLOAD_URL_COLUMN_NAME); }
+            const promptIndex = combinedHeaders.indexOf('prompt');
+            if (promptIndex > -1) { combinedHeaders.splice(promptIndex, 0, DOWNLOAD_URL_COLUMN_NAME); }
+            else { combinedHeaders.push(DOWNLOAD_URL_COLUMN_NAME); }
         }
         headersToUse = combinedHeaders;
         log('log', 'SCRAPER CSV: Using scraped data. Final CSV Headers:', headersToUse);
@@ -240,7 +240,7 @@ function generateCsvString(options) {
                 log('warn', `UPLOAD CSV: Selected URL column '${selectedUrlColumnName}' is not in validUrlHeaders.`);
             }
             filteredData = filteredData.filter(row => {
-                if (row && row.hasOwnProperty(selectedUrlColumnName)) {
+                if (row && Object.hasOwn(row, selectedUrlColumnName)) {
                     const value = String(row[selectedUrlColumnName]);
                     return value.startsWith('http://') || value.startsWith('https://');
                 }
@@ -253,9 +253,9 @@ function generateCsvString(options) {
 
         const actionColumnKey = 'action';
         if (actionFilters && actionFilters.length > 0 && filteredData.length > 0) {
-            if (filteredData[0]?.hasOwnProperty(actionColumnKey)) {
+            if (Object.hasOwn(filteredData[0], actionColumnKey)) {
                 filteredData = filteredData.filter(item => {
-                    return item && item.hasOwnProperty(actionColumnKey) && actionFilters.includes(item[actionColumnKey]);
+                    return item && Object.hasOwn(item, actionColumnKey) && actionFilters.includes(item[actionColumnKey]);
                 });
                 log('log', `UPLOAD CSV: Step 2 - Action filters applied. ${filteredData.length} items remain.`);
             } else {
@@ -267,11 +267,11 @@ function generateCsvString(options) {
             filteredData = filteredData.slice(0, limit);
             log('log', `UPLOAD CSV: Step 3 - Max Rows limit (${limit}) applied. ${filteredData.length} items remain.`);
         }
-        
+
         dataToProcess = filteredData;
-        
+
         if (dataToProcess.length === 0) {
-             log('warn', `UPLOAD CSV: After all filters and limits, no data remains for CSV export.`);
+            log('warn', `UPLOAD CSV: After all filters and limits, no data remains for CSV export.`);
         }
         headersToUse = processedUploadedDataInfo.headers;
         log('log', 'UPLOAD CSV: Using filtered and limited uploaded data. Final CSV Headers:', headersToUse);
@@ -280,7 +280,7 @@ function generateCsvString(options) {
         return '';
     }
 
-    if (dataToProcess.length === 0 && (!headersToUse || headersToUse.length === 0) ) {
+    if (dataToProcess.length === 0 && (!headersToUse || headersToUse.length === 0)) {
         log('warn', `No data and no headers for source '${source}'. Returning empty CSV content (BOM only).`);
         return "\uFEFF";
     }
@@ -288,8 +288,8 @@ function generateCsvString(options) {
     const headerRow = headersToUse.map(header => escapeCsvValueIfNeeded(header)).join(',');
     const dataRows = dataToProcess.map((row, rowIndex) => {
         if (!row || typeof row !== 'object') {
-             log('warn', `Skipping invalid row object at index ${rowIndex} (Source: ${source}).`);
-             return '';
+            log('warn', `Skipping invalid row object at index ${rowIndex} (Source: ${source}).`);
+            return '';
         }
         return headersToUse.map(header => {
             let value = '';
@@ -310,14 +310,14 @@ function generateCsvString(options) {
                             value = originalUrl;
                         }
                     }
-                } else if (source === 'scraper' && row.jobParams && Object.prototype.hasOwnProperty.call(row.jobParams, header)) {
-                     value = row.jobParams[header];
-                } else if (Object.prototype.hasOwnProperty.call(row, header)) {
+                } else if (source === 'scraper' && row.jobParams && Object.hasOwn(row.jobParams, header)) {
+                    value = row.jobParams[header];
+                } else if (Object.hasOwn(row, header)) {
                     value = row[header];
                 }
             } catch (accessError) {
-                 log('error', `Error accessing property '${header}' on row ${rowIndex} (Source: ${source}):`, accessError);
-                 value = 'ACCESS_ERROR';
+                log('error', `Error accessing property '${header}' on row ${rowIndex} (Source: ${source}):`, accessError);
+                value = 'ACCESS_ERROR';
             }
             return (header === 'prompt') ? alwaysQuoteCsvValue(value) : escapeCsvValueIfNeeded(value);
         }).join(',');
@@ -325,9 +325,9 @@ function generateCsvString(options) {
 
     const bom = "\uFEFF";
     if (dataRows.length === 0 && dataToProcess.length > 0) {
-         log('warn', 'CSV: No valid data rows after mapping, though dataToProcess was not empty.');
+        log('warn', 'CSV: No valid data rows after mapping, though dataToProcess was not empty.');
     }
-    
+
     const csvContent = bom + headerRow + (dataRows.length > 0 ? '\n' + dataRows.join('\n') : '');
     log('log', `Generated CSV: ${dataRows.length} data rows for source '${source}'. Length: ${csvContent.length}`);
     return csvContent;
@@ -350,16 +350,16 @@ function broadcastStatus() {
         hasData: collectedData.length > 0 || (processedUploadedDataInfo && processedUploadedDataInfo.count > 0),
         // Optionally include processed upload info if relevant
         ...(processedUploadedDataInfo && { // Conditionally spread properties if info exists
-             uploadStatus: currentStatus, // Or a specific upload status?
-             uploadDataCount: processedUploadedDataInfo.count,
-             // headers: processedUploadedDataInfo.headers, // Avoid sending large arrays repeatedly?
-             // actions: processedUploadedDataInfo.actions
-         })
+            uploadStatus: currentStatus, // Or a specific upload status?
+            uploadDataCount: processedUploadedDataInfo.count,
+            // headers: processedUploadedDataInfo.headers, // Avoid sending large arrays repeatedly?
+            // actions: processedUploadedDataInfo.actions
+        })
     };
     log('debug', "Broadcasting status to popup:", statusPayload);
     chrome.runtime.sendMessage(statusPayload).catch(error => {
         if (!error.message.includes("Could not establish connection") && !error.message.includes("Receiving end does not exist")) {
-             log('warn', "Error broadcasting status (popup might be closed or other issue):", error.message);
+            log('warn', "Error broadcasting status (popup might be closed or other issue):", error.message);
         }
     });
 }
@@ -401,130 +401,130 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
 
         case "process-uploaded-csv":
-             log('log', "Received request to process uploaded CSV.");
-             isAsyncResponse = true;
-             uploadedData = [];
-             processedUploadedDataInfo = null;
+            log('log', "Received request to process uploaded CSV.");
+            isAsyncResponse = true;
+            uploadedData = [];
+            processedUploadedDataInfo = null;
 
-             try {
-                 sendResponse({ status: "processing_started" });
-             } catch (e) {
-                 log('warn', "Could not send 'processing_started' immediately.", e.message);
-             }
+            try {
+                sendResponse({ status: "processing_started" });
+            } catch (e) {
+                log('warn', "Could not send 'processing_started' immediately.", e.message);
+            }
 
-             (async () => {
-                 let responsePayload = { action: "upload_processed_result" };
-                 try {
-                     if (!message.content || typeof message.content !== 'string' || message.content.trim() === '') {
-                         throw new Error("No CSV content received or content is empty.");
-                     }
-                     const lines = message.content.split(/\r?\n/);
-                     if (lines.length < 1) throw new Error("CSV content has no lines.");
+            (async () => {
+                let responsePayload = { action: "upload_processed_result" };
+                try {
+                    if (!message.content || typeof message.content !== 'string' || message.content.trim() === '') {
+                        throw new Error("No CSV content received or content is empty.");
+                    }
+                    const lines = message.content.split(/\r?\n/);
+                    if (lines.length < 1) throw new Error("CSV content has no lines.");
 
-                     const headerLine = lines[0].trim();
-                     const rawHeaders = parseCsvLine(headerLine);
-                     if (rawHeaders.length === 0 || rawHeaders.every(h => !h || h.trim() === '')) {
+                    const headerLine = lines[0].trim();
+                    const rawHeaders = parseCsvLine(headerLine);
+                    if (rawHeaders.length === 0 || rawHeaders.every(h => !h || h.trim() === '')) {
                         throw new Error("No valid headers found in CSV.");
-                     }
-                     const headers = rawHeaders.map(h => h.trim()); // Trim headers
+                    }
+                    const headers = rawHeaders.map(h => h.trim()); // Trim headers
 
-                     uploadedData = [];
-                     for (let i = 1; i < lines.length; i++) {
-                         const line = lines[i].trim();
-                         if (line === '') continue;
-                         const values = parseCsvLine(line);
-                         if (values.length > 0 && values.some(val => val && val.trim() !== '')) {
-                             const rowObject = {};
-                             headers.forEach((header, index) => { // Use trimmed headers
-                                 if(header.length > 0) { // Ensure header itself is not empty after trim
-                                     rowObject[header] = index < values.length ? values[index] : undefined;
-                                 }
-                             });
-                             if (Object.keys(rowObject).length > 0) {
-                                 uploadedData.push(rowObject);
-                             }
-                         }
-                     }
-                     log('log', `Parsed ${uploadedData.length} data rows from uploaded CSV.`);
-                     const totalRows = uploadedData.length;
+                    uploadedData = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (line === '') continue;
+                        const values = parseCsvLine(line);
+                        if (values.length > 0 && values.some(val => val && val.trim() !== '')) {
+                            const rowObject = {};
+                            headers.forEach((header, index) => { // Use trimmed headers
+                                if (header.length > 0) { // Ensure header itself is not empty after trim
+                                    rowObject[header] = index < values.length ? values[index] : undefined;
+                                }
+                            });
+                            if (Object.keys(rowObject).length > 0) {
+                                uploadedData.push(rowObject);
+                            }
+                        }
+                    }
+                    log('log', `Parsed ${uploadedData.length} data rows from uploaded CSV.`);
+                    const totalRows = uploadedData.length;
 
-                     let validUrlHeaders = [];
-                     if (headers.length > 0 && totalRows > 0) {
-                         validUrlHeaders = headers.filter(header => {
-                             if (!header) return false; // Already trimmed
-                             const rowsToScan = Math.min(totalRows, 20);
-                             for (let i = 0; i < rowsToScan; i++) {
-                                 const item = uploadedData[i];
-                                 if (item && item.hasOwnProperty(header)) {
-                                     const value = String(item[header]);
-                                     if (value.startsWith('http://') || value.startsWith('https://')) {
-                                         return true;
-                                     }
-                                 }
-                             }
-                             return false;
-                         });
-                     }
-                     log('log', `Found valid URL headers: [${validUrlHeaders.join(', ')}]`);
+                    let validUrlHeaders = [];
+                    if (headers.length > 0 && totalRows > 0) {
+                        validUrlHeaders = headers.filter(header => {
+                            if (!header) return false; // Already trimmed
+                            const rowsToScan = Math.min(totalRows, 20);
+                            for (let i = 0; i < rowsToScan; i++) {
+                                const item = uploadedData[i];
+                                if (item && Object.hasOwn(item, header)) {
+                                    const value = String(item[header]);
+                                    if (value.startsWith('http://') || value.startsWith('https://')) {
+                                        return true;
+                                    }
+                                }
+                            }
+                            return false;
+                        });
+                    }
+                    log('log', `Found valid URL headers: [${validUrlHeaders.join(', ')}]`);
 
-                     const urlCountsPerColumn = {};
-                     if (totalRows > 0) {
-                         validUrlHeaders.forEach(validHeader => {
-                             let count = 0;
-                             uploadedData.forEach(item => {
-                                 if (item && item.hasOwnProperty(validHeader)) {
-                                     const value = String(item[validHeader]);
-                                     if (value.startsWith('http://') || value.startsWith('https://')) {
-                                         count++;
-                                     }
-                                 }
-                             });
-                             urlCountsPerColumn[validHeader] = count;
-                         });
-                     }
-                     log('log', 'URL counts per valid column:', urlCountsPerColumn);
+                    const urlCountsPerColumn = {};
+                    if (totalRows > 0) {
+                        validUrlHeaders.forEach(validHeader => {
+                            let count = 0;
+                            uploadedData.forEach(item => {
+                                if (item && Object.hasOwn(item, validHeader)) {
+                                    const value = String(item[validHeader]);
+                                    if (value.startsWith('http://') || value.startsWith('https://')) {
+                                        count++;
+                                    }
+                                }
+                            });
+                            urlCountsPerColumn[validHeader] = count;
+                        });
+                    }
+                    log('log', 'URL counts per valid column:', urlCountsPerColumn);
 
-                     const actionsSet = new Set();
-                     const actionColumnKey = 'action';
-                     if(headers.includes(actionColumnKey)){
-                          uploadedData.forEach(item => {
-                              if (item && item[actionColumnKey] && typeof item[actionColumnKey] === 'string' && item[actionColumnKey].trim() !== '') {
-                                  actionsSet.add(item[actionColumnKey].trim());
-                              }
-                          });
-                     } else {
-                         log('warn', `Action column ('${actionColumnKey}') not found in uploaded CSV headers.`);
-                     }
+                    const actionsSet = new Set();
+                    const actionColumnKey = 'action';
+                    if (headers.includes(actionColumnKey)) {
+                        uploadedData.forEach(item => {
+                            if (item && item[actionColumnKey] && typeof item[actionColumnKey] === 'string' && item[actionColumnKey].trim() !== '') {
+                                actionsSet.add(item[actionColumnKey].trim());
+                            }
+                        });
+                    } else {
+                        log('warn', `Action column ('${actionColumnKey}') not found in uploaded CSV headers.`);
+                    }
 
-                     processedUploadedDataInfo = {
-                         headers: headers, // Use trimmed headers
-                         validUrlHeaders: validUrlHeaders,
-                         urlCountsPerColumn: urlCountsPerColumn,
-                         totalRows: totalRows,
-                         actions: Array.from(actionsSet).sort(),
-                         count: totalRows
-                     };
-                     responsePayload.status = 'success';
-                     responsePayload.result = processedUploadedDataInfo;
-                     currentStatus = `Processed ${processedUploadedDataInfo.count} CSV rows`;
-                 } catch (error) {
-                     log('error', "Error processing uploaded CSV:", error);
-                     responsePayload.status = 'error';
-                     responsePayload.message = error.message || "Unknown CSV processing error.";
-                     currentStatus = "Upload Processing Error";
-                     processedUploadedDataInfo = null;
-                     uploadedData = [];
-                 } finally {
-                     log('debug', "Sending upload processed result to all listeners:", responsePayload);
-                     chrome.runtime.sendMessage(responsePayload).catch(e => {
-                         if (!e.message.includes("Could not establish connection") && !e.message.includes("Receiving end does not exist")) {
-                             log('warn', "Error sending 'upload_processed_result' message:", e.message);
-                         }
-                     });
-                     broadcastStatus();
-                 }
-             })();
-             return true; // Keep channel open for async IIFE
+                    processedUploadedDataInfo = {
+                        headers: headers, // Use trimmed headers
+                        validUrlHeaders: validUrlHeaders,
+                        urlCountsPerColumn: urlCountsPerColumn,
+                        totalRows: totalRows,
+                        actions: Array.from(actionsSet).sort(),
+                        count: totalRows
+                    };
+                    responsePayload.status = 'success';
+                    responsePayload.result = processedUploadedDataInfo;
+                    currentStatus = `Processed ${processedUploadedDataInfo.count} CSV rows`;
+                } catch (error) {
+                    log('error', "Error processing uploaded CSV:", error);
+                    responsePayload.status = 'error';
+                    responsePayload.message = error.message || "Unknown CSV processing error.";
+                    currentStatus = "Upload Processing Error";
+                    processedUploadedDataInfo = null;
+                    uploadedData = [];
+                } finally {
+                    log('debug', "Sending upload processed result to all listeners:", responsePayload);
+                    chrome.runtime.sendMessage(responsePayload).catch(e => {
+                        if (!e.message.includes("Could not establish connection") && !e.message.includes("Receiving end does not exist")) {
+                            log('warn', "Error sending 'upload_processed_result' message:", e.message);
+                        }
+                    });
+                    broadcastStatus();
+                }
+            })();
+            return true; // Keep channel open for async IIFE
 
         case "download-csv": // Primarily for Scraper CSV, or Upload CSV as fallback
             isAsyncResponse = true; // FileReader and chrome.downloads are async
@@ -534,17 +534,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
             let csvDataAvailable = false;
             if (csvSource === 'scraper' && collectedData && collectedData.length > 0) {
-                 csvDataAvailable = true;
+                csvDataAvailable = true;
             } else if (csvSource === 'upload' && uploadedData && uploadedData.length > 0 && processedUploadedDataInfo) {
-                 csvDataAvailable = true;
+                csvDataAvailable = true;
             }
 
             if (!csvDataAvailable) {
-                 log('warn', `CSV Download: No initial data for source '${csvSource}'.`);
-                 currentStatus = `Idle - No data for ${csvSource} CSV`;
-                 broadcastStatus();
-                 sendResponse({ status: "no_data", message: `No initial data for ${csvSource} CSV.` });
-                 break;
+                log('warn', `CSV Download: No initial data for source '${csvSource}'.`);
+                currentStatus = `Idle - No data for ${csvSource} CSV`;
+                broadcastStatus();
+                sendResponse({ status: "no_data", message: `No initial data for ${csvSource} CSV.` });
+                break;
             }
 
             currentStatus = `Generating ${csvSource === 'upload' ? 'Upload Data' : 'Scraper'} CSV...`;
@@ -568,7 +568,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const reader = new FileReader();
 
-                reader.onload = function() {
+                reader.onload = function () {
                     const dataUrl = reader.result;
                     const now = new Date();
                     const dateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
@@ -584,9 +584,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             currentStatus = "Idle";
                             sendResponse({ status: "download_started", message: "CSV Download gestartet." });
                         } else {
-                             log('warn', `CSV Download failed to start (no ID) for ${csvSource}. User might have cancelled.`);
-                             currentStatus = "Download Failed";
-                             sendResponse({ status: "error", message: "CSV Download failed or cancelled." });
+                            log('warn', `CSV Download failed to start (no ID) for ${csvSource}. User might have cancelled.`);
+                            currentStatus = "Download Failed";
+                            sendResponse({ status: "error", message: "CSV Download failed or cancelled." });
                         }
                         broadcastStatus();
                     }).catch(error => {
@@ -596,7 +596,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         sendResponse({ status: "error", message: error.message });
                     });
                 };
-                reader.onerror = function() {
+                reader.onerror = function () {
                     log('error', 'FileReader error for CSV:', reader.error);
                     currentStatus = "Download Prep Error";
                     broadcastStatus();
@@ -631,16 +631,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
             // Filterlogik bleibt unverändert
             let imagesToDownload = [...uploadedData].filter(row => {
-                if (row && row.hasOwnProperty(selectedUrlColImg)) {
+                if (row && Object.hasOwn(row, selectedUrlColImg)) {
                     const value = String(row[selectedUrlColImg]);
                     return value.startsWith('http://') || value.startsWith('https://');
                 }
                 return false;
             });
             const actionColKeyImg = 'action';
-            if (imageOptions.actionFilters && imageOptions.actionFilters.length > 0 && imagesToDownload[0]?.hasOwnProperty(actionColKeyImg)) {
+            if (imageOptions.actionFilters && imageOptions.actionFilters.length > 0 && Object.hasOwn(imagesToDownload[0], actionColKeyImg)) {
                 imagesToDownload = imagesToDownload.filter(item =>
-                    item && item.hasOwnProperty(actionColKeyImg) && imageOptions.actionFilters.includes(item[actionColKeyImg])
+                    item && Object.hasOwn(item, actionColKeyImg) && imageOptions.actionFilters.includes(item[actionColKeyImg])
                 );
             }
             if (imageOptions.limit && imageOptions.limit > 0 && imageOptions.limit < imagesToDownload.length) {
@@ -737,7 +737,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 collectedData = deduplicateDataByOriginalURL(combinedData);
             }
             if (message.params && Array.isArray(message.params)) {
-                 message.params.forEach(param => (collectedParams || (collectedParams = new Set())).add(param));
+                message.params.forEach(param => (collectedParams || (collectedParams = new Set())).add(param));
             }
             currentStatus = isScraping ? "Running..." : "Processing Data...";
             broadcastStatus();
@@ -751,7 +751,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             currentStatus = "Idle";
             if (isScraping) { // Wenn Scraping lief, setze es zurück
                 isScraping = false;
-                 // Sende Stopp-Signal an Content-Script, falls es noch aktiv sein könnte (optional, aber sauber)
+                // Sende Stopp-Signal an Content-Script, falls es noch aktiv sein könnte (optional, aber sauber)
                 chrome.tabs.query({ active: true, url: "*://*.midjourney.com/*" }, (tabs) => {
                     if (tabs && tabs.length > 0) {
                         chrome.tabs.sendMessage(tabs[0].id, { action: "stop-scraping" }).catch(e => log('warn', 'Failed to send stop-scraping on clear-data', e.message));
@@ -781,13 +781,13 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Wenn die URL sich ändert *und* nicht mehr zur Midjourney Imagine Seite passt ODER der Status "loading" ist
     const targetUrlPattern = /https?:\/\/www\.midjourney\.com\/imagine/i;
-     if (changeInfo.status === 'loading' || (changeInfo.url && !targetUrlPattern.test(changeInfo.url))) {
-         if (readyContentScripts.has(tabId)) {
-             log('log', `Tab ${tabId} navigated or reloaded, removing from ready set (will re-add on ready).`);
-             readyContentScripts.delete(tabId);
-         }
-     }
- });
+    if (changeInfo.status === 'loading' || (changeInfo.url && !targetUrlPattern.test(changeInfo.url))) {
+        if (readyContentScripts.has(tabId)) {
+            log('log', `Tab ${tabId} navigated or reloaded, removing from ready set (will re-add on ready).`);
+            readyContentScripts.delete(tabId);
+        }
+    }
+});
 
 // --- Service Worker Lifecycle Events --- (Keep existing onInstalled, onStartup)
 chrome.runtime.onInstalled.addListener(() => {
@@ -798,8 +798,8 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onStartup.addListener(() => {
     log('log', 'Browser startup detected. Resetting extension state.');
-     collectedData = []; collectedParams = new Set(); isScraping = false; currentStatus = "Idle"; uploadedData = []; processedUploadedDataInfo = null;
-     readyContentScripts = new Set(); // <<-- Diese Zeile hinzufügen
+    collectedData = []; collectedParams = new Set(); isScraping = false; currentStatus = "Idle"; uploadedData = []; processedUploadedDataInfo = null;
+    readyContentScripts = new Set(); // <<-- Diese Zeile hinzufügen
 });
 
 log('log', 'Background service worker started successfully.');
