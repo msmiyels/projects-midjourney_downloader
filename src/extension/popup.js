@@ -30,7 +30,13 @@ let processedUploadDataInfo = null; // Will hold { headers, validUrlHeaders, url
 let activeActionFilters = new Set();
 let isImaginePage = false;
 
-// --- Helper Functions ---
+/**
+ * Checks if the active browser tab is a Midjourney "/imagine" page and updates the scraper UI accordingly.
+ *
+ * Updates UI elements to show or hide scraper controls and warning messages based on the current tab's URL.
+ *
+ * @returns {Promise<boolean>} True if the active tab is the target "/imagine" page; otherwise, false.
+ */
 
 async function checkActiveTabAndUpdateScraperUI() {
     try {
@@ -59,6 +65,13 @@ async function checkActiveTabAndUpdateScraperUI() {
     }
 }
 
+/**
+ * Switches the visible tab in the popup UI and updates related state and controls.
+ *
+ * Activates the specified tab, updates button styles, and ensures the correct tab content is displayed. If switching to the "scraper" tab, checks the active browser tab and updates scraper controls accordingly. Refreshes UI state and button availability without resetting upload data.
+ *
+ * @param {string} tabId - The ID of the tab to activate ("scraper" or "downloader").
+ */
 async function showTab(tabId) {
     console.log(`Switching to tab: ${tabId}`);
     activeTabId = tabId;
@@ -78,6 +91,16 @@ async function showTab(tabId) {
     requestAndUpdateState(false);
 }
 
+/**
+ * Updates the status message and data count display for the specified UI section.
+ *
+ * Adjusts visibility and styling of the status area based on the provided message, count, and type. For the "scraper" section, status is only shown if the user is on the target page. For the "upload" section, the status may be shown if there is a nonzero count even without a message.
+ *
+ * @param {'scraper'|'upload'} section - The UI section to update.
+ * @param {string} message - The status message to display.
+ * @param {?number} [count=null] - The data count to display; if null, defaults to 0.
+ * @param {'info'|'success'|'warning'|'error'|'partial-info'} [type='info'] - The status type, affecting styling.
+ */
 function updateStatus(section, message, count = null, type = 'info') {
     console.log(`Popup Status [${section}, ${type}]:`, message, "Count:", count);
     let statusDiv = section === 'scraper' ? statusScraperDiv : statusUploadDiv;
@@ -115,7 +138,11 @@ function updateStatus(section, message, count = null, type = 'info') {
     }
 }
 
-// NEUE/ÜBERARBEITETE Funktion in popup.js:
+/**
+ * Updates the detailed status message and filter visibility for the upload tab based on the current state of processed upload data.
+ *
+ * Displays appropriate messages for cases such as missing or invalid URL columns, absence of data rows, or partial validity of URLs in the selected column. Shows or hides upload filters depending on data validity and user selection.
+ */
 function updateDetailedUploadStatus() {
     if (!statusUploadDiv) return; // Sicherstellen, dass das Status-Div existiert
     
@@ -200,6 +227,11 @@ function updateDetailedUploadStatus() {
 }
 
 
+/**
+ * Resets the upload UI to its initial state, clearing file inputs, filters, and status messages.
+ *
+ * Also resets internal upload-related state and updates the UI to reflect that no upload data is present.
+ */
 function resetUploadUI() {
     console.log("Resetting Upload UI (Downloader Tab)");
     if (csvFileInput) csvFileInput.value = null; // Clear the file input
@@ -226,6 +258,15 @@ function resetUploadUI() {
     requestAndUpdateState(false); 
 }
 
+/**
+ * Updates the enabled or disabled state of UI buttons based on the current scraping status, active tab, and data availability.
+ *
+ * Adjusts the start, stop, upload, and download buttons to reflect whether scraping is running, whether the user is on the correct page, and whether valid data is available for download in the current context.
+ *
+ * @param {boolean} isScrapingRunning - Indicates if a scraping operation is currently in progress.
+ * @param {boolean|null} [scraperHasData=null] - Whether the scraper has collected data; relevant for enabling download in the scraper tab.
+ * @param {boolean|null} [uploadDataHasRows=null] - Whether the uploaded CSV contains data rows; relevant for enabling download in the downloader tab.
+ */
 function updateButtonStates(isScrapingRunning, scraperHasData = null, uploadDataHasRows = null) {
     // uploadDataHasRows ist true, wenn processedUploadDataInfo.totalRows > 0
 
@@ -562,6 +603,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 
+/**
+ * Requests the current extension state from the background script and updates the popup UI accordingly.
+ *
+ * Depending on the response and the `resetStateForUploadTab` flag, updates status messages, upload data info, dropdowns, filters, and button states for both the scraper and uploader tabs. Handles error conditions and ensures the UI reflects the latest available data or resets to a waiting state if necessary.
+ *
+ * @param {boolean} [resetStateForUploadTab=true] - Whether to reset the upload tab state if no new upload data is received.
+ */
 async function requestAndUpdateState(resetStateForUploadTab = true) {
     console.log("Requesting current state. Reset upload tab state:", resetStateForUploadTab);
     
@@ -648,6 +696,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+/**
+ * Populates the URL column dropdown with valid URL header options from uploaded data.
+ *
+ * If no valid URL columns are found, displays a disabled option indicating this. Otherwise, adds each valid URL header as an option and selects a default, prioritizing 'download_url', then 'url', then the first alphabetically.
+ *
+ * @param {string[]} allHeaders - All headers detected in the uploaded CSV file.
+ * @param {string[]} validUrlHeaders - Headers identified as valid URL columns.
+ */
 function populateUrlColumnSelect(allHeaders = [], validUrlHeaders = []) {
     if (!urlColumnSelect) return;
     urlColumnSelect.innerHTML = ''; 
@@ -690,6 +746,13 @@ function populateUrlColumnSelect(allHeaders = [], validUrlHeaders = []) {
     }
 }
 
+/**
+ * Populates the action filter container with buttons for each available action.
+ *
+ * Clears existing filters and displays a placeholder if no actions are provided. Each button allows toggling its corresponding action as an active filter.
+ *
+ * @param {string[]} [actions=[]] - List of action names to create filter buttons for.
+ */
 function populateActionFilters(actions = []) {
     if (!actionFilterContainer) return;
     actionFilterContainer.innerHTML = '';
@@ -711,6 +774,14 @@ function populateActionFilters(actions = []) {
     });
 }
 
+/**
+ * Toggles the active state of an action filter button and updates the set of active action filters.
+ *
+ * @param {Event} event - The click event from an action filter button.
+ *
+ * @remark
+ * This function does not trigger immediate filtering or status updates; filters are applied when downloading.
+ */
 function handleActionFilterToggle(event) {
     const button = event.target;
     const action = button.dataset.action;
