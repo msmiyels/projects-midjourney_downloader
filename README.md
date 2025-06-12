@@ -50,5 +50,5 @@ follow the instructions there and have fun 🎉.
 ### Running the tools locally
 1. Clone the repository: `git clone https://github.com/msmiyels/projects-midjourney_downloader.git`
 2. Navigate to the `app/` subdirectory, located in the cloned repository root 
-3. Open the `index.html` file in your browser
+3. Open the `index.html` file in your browser (requires a JS server in the background - if started from within a JetBrains IDE, this is going to be automatically started)
 4. Follow the instructions on the page
