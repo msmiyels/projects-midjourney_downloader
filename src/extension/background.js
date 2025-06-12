@@ -607,35 +607,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 sendResponse({ status: "error", message: "URL column not specified for images." });
                 break;
             }
-            if (processedUploadedDataInfo.validUrlHeaders && !processedUploadedDataInfo.validUrlHeaders.includes(selectedUrlColImg)) {
-                log('warn', `Image download: Selected URL column '${selectedUrlColImg}' not in validUrlHeaders.`);
-            }
 
-            let imagesToDownload = [...uploadedData];
-            imagesToDownload = imagesToDownload.filter(row => {
+            // Filterlogik bleibt unverändert
+            let imagesToDownload = [...uploadedData].filter(row => {
                 if (row && row.hasOwnProperty(selectedUrlColImg)) {
                     const value = String(row[selectedUrlColImg]);
                     return value.startsWith('http://') || value.startsWith('https://');
                 }
                 return false;
             });
-            log('log', `IMAGE DL: Step 1 - Filtered by valid URLs in '${selectedUrlColImg}'. ${imagesToDownload.length} items.`);
-
             const actionColKeyImg = 'action';
-            if (imageOptions.actionFilters && imageOptions.actionFilters.length > 0 && imagesToDownload.length > 0) {
-                if (imagesToDownload[0]?.hasOwnProperty(actionColKeyImg)) {
-                    imagesToDownload = imagesToDownload.filter(item =>
-                        item && item.hasOwnProperty(actionColKeyImg) && imageOptions.actionFilters.includes(item[actionColKeyImg])
-                    );
-                    log('log', `IMAGE DL: Step 2 - Action filters. ${imagesToDownload.length} items.`);
-                } else {
-                     log('warn', `IMAGE DL: Action column '${actionColKeyImg}' not found. Filters skipped.`);
-                }
+            if (imageOptions.actionFilters && imageOptions.actionFilters.length > 0 && imagesToDownload[0]?.hasOwnProperty(actionColKeyImg)) {
+                imagesToDownload = imagesToDownload.filter(item =>
+                    item && item.hasOwnProperty(actionColKeyImg) && imageOptions.actionFilters.includes(item[actionColKeyImg])
+                );
             }
-
             if (imageOptions.limit && imageOptions.limit > 0 && imageOptions.limit < imagesToDownload.length) {
                 imagesToDownload = imagesToDownload.slice(0, imageOptions.limit);
-                log('log', `IMAGE DL: Step 3 - Row limit (${imageOptions.limit}). ${imagesToDownload.length} items.`);
             }
 
             if (imagesToDownload.length === 0) {
@@ -644,59 +632,76 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 break;
             }
 
-            let downloadPromises = [];
-            let successCount = 0;
-            let failureCount = 0;
-            const totalToDownload = imagesToDownload.length;
-            
-            currentStatus = `0/${totalToDownload} Bildern heruntergeladen...`;
-            broadcastStatus();
-            sendResponse({ status: "image_downloads_initiated", message: `Starte Download von ${totalToDownload} Bildern...`, totalToDownload: totalToDownload });
+            // *** BEGINN DER NEUEN, KORRIGIERTEN DOWNLOAD-LOGIK ***
 
-            imagesToDownload.forEach((row, index) => {
-                const imageUrl = row[selectedUrlColImg];
-                let filename = `image_${index + 1}`;
+            // Anonyme asynchrone Funktion, um 'await' nutzen zu können
+            (async () => {
+                let successCount = 0;
+                let failureCount = 0;
+                const totalToDownload = imagesToDownload.length;
+
+                currentStatus = `Starte Download von ${totalToDownload} Bildern...`;
+                broadcastStatus();
                 try {
-                    const urlObj = new URL(imageUrl);
-                    let pathPart = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1);
-                    if (pathPart) {
-                        pathPart = decodeURIComponent(pathPart.split('?')[0]);
-                        filename = pathPart.replace(/[^\w_.\-]/g, '_').substring(0, 60);
-                        if (!/\.(jpg|jpeg|png|gif|webp)$/i.test(filename)) {
-                            const originalExtMatch = pathPart.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-                            filename += originalExtMatch ? originalExtMatch[0] : ".jpg";
+                    sendResponse({ status: "image_downloads_initiated", message: `Starte Download von ${totalToDownload} Bildern...`, totalToDownload: totalToDownload });
+                } catch (e) {
+                    log('warn', 'sendResponse für image_downloads_initiated fehlgeschlagen (Popup evtl. schon zu)');
+                }
+
+                // SEQUENZIELLE SCHLEIFE: Behebt das Stottern und ermöglicht Live-Feedback
+                for (const [index, row] of imagesToDownload.entries()) {
+                    let finalFilename = null;
+
+                    // ROBUSTE DATEINAMEN-LOGIK: Behebt das .txt-Problem
+                    try {
+                        const imageUrl = row[selectedUrlColImg];
+                        const urlObj = new URL(imageUrl);
+                        const originalFilename = decodeURIComponent(urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1).split('?')[0]);
+
+                        if (originalFilename && originalFilename.includes('.')) {
+                            const lastDotIndex = originalFilename.lastIndexOf('.');
+                            const nameStem = originalFilename.substring(0, lastDotIndex);
+                            const nameExtension = originalFilename.substring(lastDotIndex);
+                            const stemParts = nameStem.split('_');
+                            let modifiedStem = nameStem;
+                            if (stemParts.length >= 3) {
+                                modifiedStem = stemParts.slice(0, 2).join('_');
+                            }
+                            const modifiedFilename = modifiedStem + nameExtension;
+                            const jobId = row['job_id'] || '';
+                            finalFilename = `${jobId}_${modifiedFilename}`;
+                        } else {
+                            log('error', `Konnte keinen Dateinamen mit Endung aus der URL extrahieren, überspringe: ${imageUrl}`);
+                            failureCount++;
+                            continue; // Nächste Iteration
                         }
-                    } else { filename += ".jpg"; }
-                } catch (e) { filename += ".jpg"; log('warn', `Filename gen error for ${imageUrl}`, e); }
-                
-                const jobId = row['job_id'] || row['id'] || `item${index + 1}`;
-                const finalFilename = `${jobId}_${filename}`.replace(/__+/g, '_');
-
-                downloadPromises.push(
-                    chrome.downloads.download({
-                        url: imageUrl,
-                        filename: `midjourney_exports/${finalFilename}`
-                    }).then(downloadId => {
-                        if (downloadId) successCount++; else failureCount++;
-                    }).catch(err => {
+                    } catch (e) {
+                        log('error', `Fehler bei URL-Verarbeitung, überspringe: ${row[selectedUrlColImg]}`, e);
                         failureCount++;
-                        log('error', `Error DL image ${finalFilename} (URL: ${imageUrl}):`, err.message || err);
-                    }).finally(() => {
-                        currentStatus = `${successCount + failureCount}/${totalToDownload} Bildern verarbeitet (${successCount} Erfolg, ${failureCount} Fehler).`;
-                        broadcastStatus(); // Laufendes Update für Popup
-                    })
-                );
-            });
+                        continue; // Nächste Iteration
+                    }
 
-            Promise.allSettled(downloadPromises).then(() => {
-                const finalMessage = `Bild-Downloads abgeschlossen: ${successCount}/${totalToDownload} erfolgreich.${failureCount > 0 ? ' ' + failureCount + ' fehlgeschlagen.' : ''}`;
-                currentStatus = finalMessage;
-                broadcastStatus(); // Finaler Status an Popup
-                // Ein zusätzliches sendResponse an den ursprünglichen Aufrufer ist hier nicht zwingend,
-                // da der Status über broadcastStatus aktualisiert wird und der Start bereits bestätigt wurde.
-                // Falls doch eine finale Antwort an den sendResponse-Callback des Popups gesendet werden soll:
-                // chrome.runtime.sendMessage({ action: "image_download_final_status", status: finalMessage, successCount, failureCount, totalToDownload });
-            });
+                    // Status-Update VOR jedem Download
+                    currentStatus = `(${index + 1}/${totalToDownload}) Wird heruntergeladen...`;
+                    broadcastStatus({ currentItem: finalFilename });
+
+                    try {
+                        // 'await' stellt sicher, dass ein Download abgeschlossen ist, bevor der nächste startet
+                        const downloadId = await chrome.downloads.download({
+                            url: row[selectedUrlColImg],
+                            filename: finalFilename.replace(/__+/g, '_')
+                        });
+                        if (downloadId) { successCount++; } else { failureCount++; }
+                    } catch (err) {
+                        failureCount++;
+                        log('error', `Fehler beim Download von ${finalFilename}:`, err.message || err);
+                    }
+                }
+
+                // Finaler Status
+                currentStatus = `Download abgeschlossen: ${successCount}/${totalToDownload} erfolgreich.`;
+                broadcastStatus({ currentItem: null });
+            })();
             break;
 
         case "content-status-update":

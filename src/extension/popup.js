@@ -21,6 +21,7 @@ const statusUploadDiv = document.getElementById('statusUpload');
 const dataCountUploadP = document.getElementById('dataCountUpload');
 const noFiltersPlaceholder = document.querySelector('.no-filters-placeholder');
 const downloadCsvButton = document.getElementById('downloadCsvButton');
+const currentFileStatusP = document.getElementById('currentFileStatus'); // NEUE ZEILE
 
 // --- State Variables ---
 let currentDataSource = 'none'; // 'scraper', 'upload', or 'none'
@@ -465,23 +466,43 @@ downloadCsvButton.addEventListener('click', () => {
 
     console.log("Download options:", downloadOptions);
 
-    chrome.runtime.sendMessage({ action: "download-csv", options: downloadOptions }, (response) => {
+    // HIER IST DIE KORREKTUR: Bestimme die korrekte Aktion basierend auf dem aktiven Tab
+    const actionToPerform = activeTabId === 'downloader' ? 'start-image-download' : 'download-csv';
+
+    chrome.runtime.sendMessage({ action: actionToPerform, options: downloadOptions }, (response) => {
         const finalStatusSection = downloadOptions.source === 'upload' ? 'upload' : 'scraper';
+
         if (chrome.runtime.lastError) {
             console.error("Error sending download message:", chrome.runtime.lastError.message);
             updateStatus(finalStatusSection, `Download Error: ${chrome.runtime.lastError.message}`, null, 'error');
-        } else if (response && response.status === "download_started") {
-            updateStatus(finalStatusSection, "Download initiated.", null, 'success');
-        } else if (response && response.status === "error") {
-            console.error("Download failed in background:", response.message);
-            updateStatus(finalStatusSection, `Download Error: ${response.message || 'Unknown'}`, null, 'error');
-        } else if (response && response.status === "no_data") {
-            updateStatus(finalStatusSection, "No data found matching criteria.", null, 'warning');
-        } else {
-            console.warn("Unexpected download response:", response);
-            updateStatus(finalStatusSection, "Download failed (check console).", null, 'error');
+            return; // Frühzeitiger Ausstieg
         }
-        // Always refresh state after a download attempt, after a short delay for user to see status
+        
+        // Generische Antwortbehandlung, die für beide Aktionen funktioniert
+        if (response) {
+            switch (response.status) {
+                case "download_started":
+                    updateStatus(finalStatusSection, "CSV Download initiated.", null, 'success');
+                    break;
+                case "image_downloads_initiated":
+                    updateStatus(finalStatusSection, `Started download of ${response.totalToDownload} images...`, null, 'info');
+                    break;
+                case "no_data":
+                    updateStatus(finalStatusSection, `No data found matching criteria.`, null, 'warning');
+                    break;
+                case "error":
+                    console.error("Download failed in background:", response.message);
+                    updateStatus(finalStatusSection, `Download Error: ${response.message || 'Unknown'}`, null, 'error');
+                    break;
+                default:
+                     console.warn("Unexpected download response:", response);
+                     updateStatus(finalStatusSection, "Download failed (check console).", null, 'error');
+            }
+        } else {
+             updateStatus(finalStatusSection, "No response from background.", null, 'error');
+        }
+
+        // Status nach einem Versuch immer aktualisieren, mit kurzer Verzögerung
         setTimeout(() => requestAndUpdateState(false), 1500);
     });
 });
@@ -491,22 +512,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     switch(message.action) {
         case "update-status":
-             const isScrapingSource = message.source !== 'upload';
-             if (isScrapingSource) { // Nachricht kommt vom Scraper oder ist allgemein
-                 if (isImaginePage) {
-                    updateStatus('scraper', message.status || "Unknown", message.count, 'info');
-                 }
-                 // Aktualisiere Button-Zustände basierend auf Scraper-Infos.
-                 // processedUploadDataInfo?.totalRows > 0 prüft, ob Upload-Daten für den dritten Parameter vorhanden sind.
-                 updateButtonStates(message.isRunning, message.hasData, (processedUploadDataInfo?.totalRows || 0) > 0);
-             } else { // message.source === 'upload'
-                // Wenn eine generische "update-status"-Nachricht für "upload" kommt,
-                // ist es am sichersten, den gesamten UI-Status neu abzurufen und zu rendern,
-                // da wir den aktuellen Scraper-Status für updateButtonStates benötigen und
-                // diese generische Nachricht möglicherweise nicht alle Detailinfos für den Upload-Status enthält.
-                console.log("Received generic 'upload' status update, initiating full state refresh.");
-                requestAndUpdateState(false); // `false` um den Upload-Tab nicht unnötig zurückzusetzen, wenn er bereits Daten hat
-             }
+            const isUploaderContext = message.source === 'upload';
+            
+            // Aktualisiere die Haupt-Statusnachricht im korrekten Tab
+            if (isUploaderContext) {
+                updateStatus('upload', message.status, message.count, 'info');
+            } else if (isImaginePage) { // Status für Scraper nur auf der richtigen Seite anzeigen
+                updateStatus('scraper', message.status, message.count, 'info');
+            }
+
+            // Zeige den Namen der aktuell heruntergeladenen Datei an
+            if (message.currentItem && currentFileStatusP && isUploaderContext) {
+                currentFileStatusP.textContent = `Aktuelle Datei: ${message.currentItem}`;
+                currentFileStatusP.classList.remove('hidden');
+            } else if (currentFileStatusP) {
+                currentFileStatusP.classList.add('hidden');
+            }
+            
+            // Aktualisiere die Button-Zustände.
+            // 'processedUploadDataInfo' ist hier im Gültigkeitsbereich des Popups definiert und sicher.
+            const uploadHasData = (processedUploadDataInfo && processedUploadDataInfo.totalRows > 0);
+            updateButtonStates(message.isRunning, message.hasData, uploadHasData);
             break;
 
         case "upload_processed_result":
