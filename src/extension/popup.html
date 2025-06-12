@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MidJourney Suite</title>
     <link rel="stylesheet" href="popup.css">
 </head>
+
 <body>
     <div class="popup-container">
         <h1>MidJourney Suite</h1>
-        <p align="center">Bulk download prompts and images.</p>
+        <p class="text-center">Bulk download prompts and images.</p>
 
         <div class="tab-nav">
             <button class="tab-button active" data-tab="scraper">Scraper</button>
@@ -19,7 +21,8 @@
         <div class="tab-content-wrapper">
             <div class="tab-content active" id="tabContentScraper">
                 <div id="scraperWrongPageMsg" class="status-log warning hidden">
-                    <p>Scraper functions are only available on the <a href="https://www.midjourney.com/imagine" target="_blank">midjourney.com/imagine</a> page.</p>
+                    <p>Scraper functions are only available on the <a href="https://www.midjourney.com/imagine"
+                            target="_blank">midjourney.com/imagine</a> page.</p>
                 </div>
                 <div id="scraperControlsContainer">
                     <p>Start scraping the current MidJourney page.</p>
@@ -35,10 +38,11 @@
             </div>
 
             <div class="tab-content" id="tabContentDownloader">
-                 <p>Upload a CSV to filter and download images.</p>
+                <p>Upload a CSV to filter and download images.</p>
                 <input type="file" id="csvFileInput" accept=".csv" class="hidden">
-                <div class="controls"> <button id="uploadButton" class="button upload-trigger-button">Upload CSV File</button>
-                    </div>
+                <div class="controls"> <button id="uploadButton" class="button upload-trigger-button">Upload CSV
+                        File</button>
+                </div>
                 <div id="uploadFilters" class="filter-controls hidden">
                     <h3>Filter Options</h3>
                     <div class="filter-group-left">
@@ -66,11 +70,15 @@
                     <p id="currentFileStatus" class="hidden"></p>
                 </div>
             </div>
-        </div> <hr class="separator">
+        </div>
+        <hr class="separator">
         <div class="controls download-area">
-             <button id="downloadCsvButton" class="button download-button" disabled>Download CSV / Start Image Download</button>
+            <button id="downloadCsvButton" class="button download-button" disabled>Download CSV / Start Image
+                Download</button>
         </div>
 
-    </div> <script src="popup.js"></script>
+    </div>
+    <script src="popup.js"></script>
 </body>
+
 </html>

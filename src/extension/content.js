@@ -2,9 +2,7 @@
 // Adapted from the user-provided midjourney_auto_mode.js
 // v7: Reverted to v2 logic (return true, sync sendResponse), removed custom log function.
 
-(function() {
-    'use strict';
-
+(function () {
     // Log prefix for easier debugging in the page's console
     const LOG_PREFIX = '[MJ Scraper Content]';
     console.log(`${LOG_PREFIX} Script loaded and running (v7).`);
@@ -87,46 +85,53 @@
                 const msg = error.message || '';
                 // **MODIFICATION:** Check specifically for the error we are trying to ignore.
                 if (!msg.includes("Could not establish connection") && !msg.includes("Receiving end does not exist") && !msg.includes("message channel closed before a response was received")) {
-                     console.error(`${LOG_PREFIX} Error sending status update:`, error);
+                    console.error(`${LOG_PREFIX} Error sending status update:`, error);
                 } else {
-                     // console.log(`${LOG_PREFIX} Ignored expected error sending status update: ${msg}`); // Optional: log ignored errors
+                    // console.log(`${LOG_PREFIX} Ignored expected error sending status update: ${msg}`); // Optional: log ignored errors
                 }
             });
         } catch (error) {
-             console.error(`${LOG_PREFIX} Synchronous error during sendStatusUpdate:`, error);
+            console.error(`${LOG_PREFIX} Synchronous error during sendStatusUpdate:`, error);
         }
     }
 
     /**
      * Sends the buffered scraped data and collected parameter names to the background script.
      *
-     * Clears the data buffer before sending. Logs a warning if the background script does not acknowledge receipt.
+     * Only clears the data buffer after receiving confirmation of successful receipt from the background script.
+     * Logs a warning if the background script does not acknowledge receipt.
      */
     function sendDataChunk() {
-        if (intermediateData.length > 0) {
-            console.log(`${LOG_PREFIX} Sending ${intermediateData.length} data items to background.`); // Basic logging
-            const dataToSend = [...intermediateData];
-            intermediateData = []; // Clear buffer optimistically
-
-            try {
-                chrome.runtime.sendMessage({
-                    action: "scraped-data",
-                    data: dataToSend,
-                    params: Array.from(allParamNames)
-                }).then(response => {
-                     if (response && response.received) {
-                         // console.log(`${LOG_PREFIX} Background script acknowledged data receipt.`); // Basic logging
-                     } else {
-                          console.warn(`${LOG_PREFIX} Background script did not acknowledge data receipt properly. Data might be lost.`);
-                     }
-                }).catch(error => {
-                    console.error(`${LOG_PREFIX} Error sending data chunk:`, error);
-                    // Consider re-adding dataToSend back to intermediateData for retry?
-                });
-            } catch(error) {
-                 console.error(`${LOG_PREFIX} Synchronous error during sendDataChunk:`, error);
-            }
+        if (intermediateData.length === 0) {
+            return; // Nothing to send
         }
+
+        console.log(`${LOG_PREFIX} Preparing to send ${intermediateData.length} data items to background.`);
+        const dataToSend = [...intermediateData];
+
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage({
+                action: "scraped-data",
+                data: dataToSend,
+                params: Array.from(allParamNames)
+            })
+                .then(response => {
+                    if (response && response.received) {
+                        // Only clear the buffer after successful transmission
+                        intermediateData = [];
+                        // console.log(`${LOG_PREFIX} Background script acknowledged data receipt.`);
+                        resolve(true);
+                    } else {
+                        console.warn(`${LOG_PREFIX} Background script did not acknowledge data receipt properly. Data preserved for retry.`);
+                        resolve(false);
+                    }
+                })
+                .catch(error => {
+                    console.error(`${LOG_PREFIX} Error sending data chunk:`, error);
+                    console.warn(`${LOG_PREFIX} Data preserved for retry after error.`);
+                    resolve(false);
+                });
+        });
     }
 
     // --- Data Extraction ---
@@ -156,18 +161,18 @@
                     promptElementSource = promptWrapper;
                 } else {
                     promptContentElement = promptWrapper.querySelector(SELECTORS.promptSpan);
-                     if (promptContentElement) {
-                         rawPromptText = promptContentElement.textContent?.trim() ?? rawPromptText;
-                         promptElementSource = promptWrapper;
-                     }
+                    if (promptContentElement) {
+                        rawPromptText = promptContentElement.textContent?.trim() ?? rawPromptText;
+                        promptElementSource = promptWrapper;
+                    }
                 }
             }
             if (rawPromptText === DEFAULT_VALUES.prompt) {
                 let fallbackElement = jobContainer.querySelector(SELECTORS.promptFallback);
-                 if (fallbackElement) {
-                      rawPromptText = fallbackElement.textContent?.trim() ?? rawPromptText;
-                      promptElementSource = fallbackElement;
-                 }
+                if (fallbackElement) {
+                    rawPromptText = fallbackElement.textContent?.trim() ?? rawPromptText;
+                    promptElementSource = fallbackElement;
+                }
             }
 
             let actionKeyword = null;
@@ -258,7 +263,7 @@
             }
             // --- End Image/Storage ---
         } catch (error) {
-             console.error(`${LOG_PREFIX} Error processing container ${containerId}:`, error);
+            console.error(`${LOG_PREFIX} Error processing container ${containerId}:`, error);
         }
     } // End processContainer
 
@@ -278,7 +283,7 @@
         currentIteration++;
         // console.log(`${LOG_PREFIX} Starting Iteration ${currentIteration}/${CONFIG.maxIterations}`); // Basic logging
         if (currentIteration % 10 === 0) {
-             sendStatusUpdate(`Running (Iteration ${currentIteration})...`);
+            sendStatusUpdate(`Running (Iteration ${currentIteration})...`);
         }
 
         const currentScrollTop = scrollableElement.scrollTop;
@@ -305,7 +310,7 @@
                     let containerId = containerTop || `noTop_${Date.now()}_${Math.random()}`;
 
                     if (!processedContainerTops.has(containerId)) {
-                         if (!containerTop) containersWithoutTop++;
+                        if (!containerTop) containersWithoutTop++;
                         processContainer(container, containerId);
                         foundNewElements = true;
                     }
@@ -313,9 +318,13 @@
                 if (containersWithoutTop > 0) console.warn(`${LOG_PREFIX} ${containersWithoutTop} containers found without style.top this cycle.`);
                 // console.log(`${LOG_PREFIX} Processing scan complete. Found new elements: ${foundNewElements}`); // Basic logging
 
-                 if (intermediateData.length >= CONFIG.dataChunkSize || (foundNewElements && intermediateData.length > 0)) {
-                     sendDataChunk();
-                 }
+                if (intermediateData.length >= CONFIG.dataChunkSize || (foundNewElements && intermediateData.length > 0)) {
+                    sendDataChunk().then(success => {
+                        if (!success) {
+                            console.error(`${LOG_PREFIX} Data chunk not sent successfully. Retrying in next iteration.`);
+                        }
+                    });
+                }
 
             } catch (error) {
                 console.error(`${LOG_PREFIX} !!! Error during container processing loop:`, error);
@@ -447,8 +456,8 @@
 
         // Send final status update after a delay
         setTimeout(() => {
-             const finalStatus = finishedNaturally ? "Finished" : "Stopped";
-             sendStatusUpdate(finalStatus, null, false);
+            const finalStatus = finishedNaturally ? "Finished" : "Stopped";
+            sendStatusUpdate(finalStatus, null, false);
         }, 200);
 
         return { status: "stopped" }; // Return status for listener
@@ -465,31 +474,34 @@
         console.log(`${LOG_PREFIX} Content script received message:`, message); // Basic logging
         try {
             switch (message.action) {
-                case "start-scraping":
+                case "start-scraping": {
                     // Call start function and send its response back
                     const startResponse = startScraping();
                     sendResponse(startResponse);
                     break; // Exit switch
+                }
 
-                case "stop-scraping":
+                case "stop-scraping": {
                     // Call stop function and send its response back
                     const stopResponse = stopScraping(false);
                     sendResponse(stopResponse);
                     break; // Exit switch
+                }
 
-                default:
+                default: {
                     console.warn(`${LOG_PREFIX} Unknown message action received:`, message.action);
                     // No response needed for unknown actions
                     break; // Exit switch
+                }
             }
         } catch (error) {
-             console.error(`${LOG_PREFIX} Error processing message action '${message?.action}':`, error);
-             // Attempt to send an error response if possible
-             try {
-                 sendResponse({ status: "error", message: "Internal content script error processing message." });
-             } catch (e) {
-                 console.error(`${LOG_PREFIX} Failed to send error response:`, e);
-             }
+            console.error(`${LOG_PREFIX} Error processing message action '${message?.action}':`, error);
+            // Attempt to send an error response if possible
+            try {
+                sendResponse({ status: "error", message: "Internal content script error processing message." });
+            } catch (e) {
+                console.error(`${LOG_PREFIX} Failed to send error response:`, e);
+            }
         }
 
         // Return true to indicate that the response MAY be sent asynchronously
@@ -508,7 +520,7 @@
             // kann aber auf Probleme mit dem Background-Skript hindeuten.
             console.warn(`${LOG_PREFIX} Could not send 'content_script_ready' message:`, error.message);
         });
-    } catch(e) {
-         console.error(`${LOG_PREFIX} Error sending initial ready message:`, e);
+    } catch (e) {
+        console.error(`${LOG_PREFIX} Error sending initial ready message:`, e);
     }
 })(); // End of IIFE

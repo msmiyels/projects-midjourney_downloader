@@ -3,43 +3,72 @@
 
 /* Define root variables for colors, fonts, and spacing */
 :root {
-    --color-bg: #F5F5F5; /* Light grey background for the popup body */
-    --color-surface: #FFFFFF; /* White background for elements like the status area */
-    --color-text: #10100D; /* Dark primary text color */
-    --color-text-muted: #555555; /* Grey color for secondary text */
-    --color-button-bg: #10100D; /* Dark background for the main button */
-    --color-button-text: #FFFFFF; /* White text for the main button */
-    --color-button-hover-bg: #333333; /* Darker grey for button hover state */
-    --color-stop-button-bg: #ffc107; /* Yellow background for the stop button */
-    --color-stop-button-hover-bg: #e0a800; /* Darker yellow for stop button hover */
-    --color-download-button-bg: #0d6efd; /* Blue background for the download button */
-    --color-download-button-hover-bg: #0a58ca; /* Darker blue for download button hover */
-    --color-upload-button-bg: #198754; /* Green background for upload button */
-    --color-upload-button-hover-bg: #157347; /* Darker green for upload button hover */
-    --color-disabled-bg: #adb5bd; /* Grey background for disabled buttons */
-    --color-disabled-text: #FFFFFF; /* White text for disabled buttons */
-    --color-separator: #dee2e6; /* Color for the horizontal rule */
-    --color-filter-bg: #e9ecef; /* Light background for the filter area */
-    --color-accent: #10100D; /* Accent color for links */
-    --color-warning-bg: #ffc107; /* Base yellow for warnings */
-    --color-partial-info-bg: #FFFEE0; /* Sehr helles Gelb */
-    --color-partial-info-border: #F0AD4E; /* Leicht dunklerer Rand */
-    --color-notice-border: #6c757d; /* Ein neutrales Grau */
-    --border-radius: 4px; /* Standard border radius for elements */
-    --spacing-xs: 0.25rem; /* Extra small spacing (4px) */
-    --spacing-sm: 0.5rem; /* Small spacing unit (8px) */
-    --spacing-md: 1rem; /* Medium spacing unit (16px) */
+    --color-bg: #F5F5F5;
+    /* Light grey background for the popup body */
+    --color-surface: #FFFFFF;
+    /* White background for elements like the status area */
+    --color-text: #10100D;
+    /* Dark primary text color */
+    --color-text-muted: #555555;
+    /* Grey color for secondary text */
+    --color-button-bg: #10100D;
+    /* Dark background for the main button */
+    --color-button-text: #FFFFFF;
+    /* White text for the main button */
+    --color-button-hover-bg: #333333;
+    /* Darker grey for button hover state */
+    --color-stop-button-bg: #ffc107;
+    /* Yellow background for the stop button */
+    --color-stop-button-hover-bg: #e0a800;
+    /* Darker yellow for stop button hover */
+    --color-download-button-bg: #0d6efd;
+    /* Blue background for the download button */
+    --color-download-button-hover-bg: #0a58ca;
+    /* Darker blue for download button hover */
+    --color-upload-button-bg: #198754;
+    /* Green background for upload button */
+    --color-upload-button-hover-bg: #157347;
+    /* Darker green for upload button hover */
+    --color-disabled-bg: #adb5bd;
+    /* Grey background for disabled buttons */
+    --color-disabled-text: #FFFFFF;
+    /* White text for disabled buttons */
+    --color-separator: #dee2e6;
+    /* Color for the horizontal rule */
+    --color-filter-bg: #e9ecef;
+    /* Light background for the filter area */
+    --color-accent: #10100D;
+    /* Accent color for links */
+    --color-warning-bg: #ffc107;
+    /* Base yellow for warnings */
+    --color-partial-info-bg: #FFFEE0;
+    /* Sehr helles Gelb */
+    --color-partial-info-border: #F0AD4E;
+    /* Leicht dunklerer Rand */
+    --color-notice-border: #6c757d;
+    /* Ein neutrales Grau */
+    --border-radius: 4px;
+    /* Standard border radius for elements */
+    --spacing-xs: 0.25rem;
+    /* Extra small spacing (4px) */
+    --spacing-sm: 0.5rem;
+    /* Small spacing unit (8px) */
+    --spacing-md: 1rem;
+    /* Medium spacing unit (16px) */
     --font-family-sans: 'Work Sans', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
 }
 
 .status-log.status-partial-info {
-    background-color: var(--color-surface);   /* Standard-Hintergrund (z.B. Weiß) */
-    
+    background-color: var(--color-surface);
+    /* Standard-Hintergrund (z.B. Weiß) */
+
     /* Spezieller linker Rand: dick und im gewünschten Gelb */
-    border-width: 2px;                   /* Die gewünschte Breite */
+    border-width: 2px;
+    /* Die gewünschte Breite */
     border-style: solid;
-    border-color: var(--color-stop-button-bg); /* Das Gelb vom Warning-Hintergrund */
-    
+    border-color: var(--color-stop-button-bg);
+    /* Das Gelb vom Warning-Hintergrund */
+
     /* Beibehaltung anderer wichtiger Standard-Styles von .status-log */
     border-radius: var(--border-radius);
     padding: var(--spacing-sm);
@@ -49,11 +78,11 @@
     margin: 0;
 
     /* Übergangseffekte, falls gewünscht (angepasst von .status-log) */
-    transition: background-color 0.2s ease-in-out, 
-                border-top-color 0.2s ease-in-out,
-                border-right-color 0.2s ease-in-out,
-                border-bottom-color 0.2s ease-in-out,
-                border-left-color 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out,
+        border-top-color 0.2s ease-in-out,
+        border-right-color 0.2s ease-in-out,
+        border-bottom-color 0.2s ease-in-out,
+        border-left-color 0.2s ease-in-out;
 }
 
 .status-log.status-partial-info p {
@@ -74,7 +103,9 @@ body {
 }
 
 /* Apply border-box sizing to all elements for consistent layout */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
@@ -82,8 +113,10 @@ body {
 .popup-container {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm); /* Gap between direct children */
-    padding: var(--spacing-md); /* Padding on all sides */
+    gap: var(--spacing-sm);
+    /* Gap between direct children */
+    padding: var(--spacing-md);
+    /* Padding on all sides */
 }
 
 /* Styling for the main heading (H1) */
@@ -153,7 +186,8 @@ h1 {
 
 /* Styling for individual tab content panes */
 .tab-content {
-    display: none; /* Hide inactive tabs by default */
+    display: none;
+    /* Hide inactive tabs by default */
     flex-direction: column;
     /* Apply smaller gap consistently to ALL tabs */
     gap: var(--spacing-sm);
@@ -161,16 +195,18 @@ h1 {
 }
 
 .tab-content.active {
-    display: flex; /* Show active tab content */
+    display: flex;
+    /* Show active tab content */
 }
 
 /* Style the description paragraphs inside tabs */
-#scraperControlsContainer > p,
-#tabContentDownloader > p {
+#scraperControlsContainer>p,
+#tabContentDownloader>p {
     text-align: center;
     font-size: 0.9em;
     color: var(--color-text-muted);
-    margin: 0; /* Remove default margins */
+    margin: 0;
+    /* Remove default margins */
     padding: 0;
 }
 
@@ -178,18 +214,23 @@ h1 {
 /* --- Styles for Scraper Wrong Page Message --- */
 #scraperWrongPageMsg {
     border: 1px solid var(--color-warning-bg);
-    background-color: var(--color-stop-button-bg); /* User desired background kept */
+    background-color: var(--color-stop-button-bg);
+    /* User desired background kept */
     color: var(--color-text);
     text-align: center;
-    padding: var(--spacing-sm); /* Consistent padding */
+    padding: var(--spacing-sm);
+    /* Consistent padding */
     border-radius: var(--border-radius);
-    margin: 0; /* Remove default margin */
+    margin: 0;
+    /* Remove default margin */
 }
+
 #scraperWrongPageMsg p {
     margin: 0;
     font-size: 0.9em;
     color: inherit;
 }
+
 #scraperWrongPageMsg a {
     color: var(--color-accent);
     font-weight: 500;
@@ -197,6 +238,7 @@ h1 {
     background: none;
     padding: 0;
 }
+
 #scraperWrongPageMsg a:hover {
     color: var(--color-button-hover-bg);
     background: none;
@@ -204,10 +246,11 @@ h1 {
 
 /* Container for Scraper controls+status */
 #scraperControlsContainer {
-     display: flex;
-     flex-direction: column;
-     gap: var(--spacing-sm); /* Keep small gap here */
-     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    /* Keep small gap here */
+    margin: 0;
 }
 
 /* General container for control buttons/inputs within sections */
@@ -216,16 +259,19 @@ h1 {
     flex-direction: column;
     align-items: stretch;
     margin: 0;
-    gap: var(--spacing-sm); /* Ensure gap for potential multiple elements */
+    gap: var(--spacing-sm);
+    /* Ensure gap for potential multiple elements */
 }
 
 /* Make scraper controls side-by-side */
 .scraper-controls {
     flex-direction: row;
     /* min-height: var(--controls-min-height); /* REMOVED */
-    align-items: center; /* Vertically center buttons in the row */
+    align-items: center;
+    /* Vertically center buttons in the row */
 }
-.scraper-controls > .button {
+
+.scraper-controls>.button {
     flex: 1;
 }
 
@@ -256,6 +302,7 @@ h1 {
     background-color: var(--color-stop-button-bg);
     color: var(--color-text);
 }
+
 .stop-button:hover:not(:disabled) {
     background-color: var(--color-stop-button-hover-bg);
 }
@@ -264,53 +311,63 @@ h1 {
 .download-button {
     background-color: var(--color-download-button-bg);
 }
+
 .download-button:hover:not(:disabled) {
     background-color: var(--color-download-button-hover-bg);
 }
 
 /* Specific styling for the Upload button */
 .upload-trigger-button {
-     background-color: var(--color-upload-button-bg);
+    background-color: var(--color-upload-button-bg);
 }
+
 .upload-trigger-button:hover:not(:disabled) {
-     background-color: var(--color-upload-button-hover-bg);
+    background-color: var(--color-upload-button-hover-bg);
 }
 
 /* Styling for disabled buttons */
 .button:disabled {
-     background-color: var(--color-disabled-bg) !important;
-     border: none;
-     color: var(--color-disabled-text) !important;
-     opacity: 0.65;
-     cursor: not-allowed;
+    background-color: var(--color-disabled-bg) !important;
+    border: none;
+    color: var(--color-disabled-text) !important;
+    opacity: 0.65;
+    cursor: not-allowed;
 }
 
 /* Styling for the status log areas */
 .status-log {
-    margin: 0; /* Remove default margin, rely on parent gap */
+    margin: 0;
+    /* Remove default margin, rely on parent gap */
     padding: var(--spacing-sm);
     background-color: var(--color-surface);
     border-radius: var(--border-radius);
     font-size: 0.85em;
     text-align: center;
     border: 1px solid var(--color-separator);
-    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; /* Add transition */
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    /* Add transition */
 }
 
 /* Styling for paragraphs within the status log */
 .status-log p {
     margin: 0.2rem 0;
-    color: var(--color-text); /* Default color for all status lines */
+    color: var(--color-text);
+    /* Default color for all status lines */
 }
 
 /* Error state styling for status log */
 .status-log.status-error {
-    background-color: #f8d7da; /* Standard Bootstrap light red */
-    border-color: #f5c6cb; /* Standard Bootstrap light red border */
-    color: #721c24; /* Standard Bootstrap dark red text */
+    background-color: #f8d7da;
+    /* Standard Bootstrap light red */
+    border-color: #f5c6cb;
+    /* Standard Bootstrap light red border */
+    color: #721c24;
+    /* Standard Bootstrap dark red text */
 }
+
 .status-log.status-error p {
-     color: #721c24; /* Ensure paragraphs inside also use dark red text */
+    color: #721c24;
+    /* Ensure paragraphs inside also use dark red text */
 }
 
 /* --- Styles for Upload Filters --- */
@@ -320,10 +377,12 @@ h1 {
     background-color: var(--color-bg);
     padding: var(--spacing-sm);
     border-radius: var(--border-radius);
-    margin: 0; /* Remove default margin */
+    margin: 0;
+    /* Remove default margin */
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm); /* Use consistent small gap */
+    gap: var(--spacing-sm);
+    /* Use consistent small gap */
 }
 
 /* Heading within the filter area */
@@ -339,38 +398,40 @@ h1 {
 
 /* Styles for filter layout within Downloader Tab */
 .filter-group-left {
-     display: flex;
-     flex-direction: column;
-     gap: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
 }
 
 .filter-section {
-     display: flex;
-     flex-direction: column;
-     gap: var(--spacing-xs); /* Reduced gap between label and control */
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    /* Reduced gap between label and control */
 }
 
 .filter-section label {
-     font-weight: 500;
-     font-size: 0.85em;
-     color: var(--color-text-muted);
-     margin: 0;
-     padding: 0;
+    font-weight: 500;
+    font-size: 0.85em;
+    color: var(--color-text-muted);
+    margin: 0;
+    padding: 0;
 }
 
 .filter-section select,
 .filter-section input[type="number"] {
-     padding: var(--spacing-xs) var(--spacing-sm);
-     font-size: 0.9em;
-     border: 1px solid #ced4da;
-     border-radius: var(--border-radius);
-     background-color: var(--color-surface);
-     color: var(--color-text);
-     line-height: 1.3;
-     width: 100%;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.9em;
+    border: 1px solid #ced4da;
+    border-radius: var(--border-radius);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    line-height: 1.3;
+    width: 100%;
 }
+
 .filter-section input[type="number"]::placeholder {
-     color: #adb5bd;
+    color: #adb5bd;
 }
 
 .filter-section-action {
@@ -407,11 +468,13 @@ h1 {
     transition: background-color 0.15s, color 0.15s, border-color 0.15s;
     font-weight: 400;
 }
+
 .action-filter-button:hover {
     background-color: #f8f9fa;
     border-color: #aaa;
     color: var(--color-text);
 }
+
 .action-filter-button.active {
     background-color: var(--color-button-bg);
     color: var(--color-button-text);
@@ -423,17 +486,21 @@ h1 {
 hr.separator {
     border: none;
     border-top: 1px solid var(--color-separator);
-    margin: 0; /* Remove default margin */
+    margin: 0;
+    /* Remove default margin */
 }
 
 .download-area {
-    margin: 0; /* Remove default margin */
+    margin: 0;
+    /* Remove default margin */
     /* Center the button */
     display: flex;
     justify-content: center;
 }
-.download-area > .button {
-    width: 100%; /* Make button full width */
+
+.download-area>.button {
+    width: 100%;
+    /* Make button full width */
 }
 
 
@@ -447,11 +514,21 @@ hr.separator {
 /* Default is white (from .status-log background-color) */
 
 .status-log.status-warning {
-    background-color: var(--color-stop-button-bg); /* Use the stronger yellow */
-    border-color: var(--color-stop-button-hover-bg); /* Optional: darker border */
+    background-color: var(--color-stop-button-bg);
+    /* Use the stronger yellow */
+    border-color: var(--color-stop-button-hover-bg);
+    /* Optional: darker border */
     /* Ensure text is readable on yellow */
-    color: var(--color-text); /* Keep dark text */
+    color: var(--color-text);
+    /* Keep dark text */
 }
+
 .status-log.status-warning p {
-    color: var(--color-text); /* Ensure paragraphs inside also use dark text */
+    color: var(--color-text);
+    /* Ensure paragraphs inside also use dark text */
+}
+
+/* Text alignment utilities */
+.text-center {
+    text-align: center;
 }
