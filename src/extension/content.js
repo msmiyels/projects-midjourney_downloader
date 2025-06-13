@@ -109,28 +109,21 @@
         console.log(`${LOG_PREFIX} Preparing to send ${intermediateData.length} data items to background.`);
         const dataToSend = [...intermediateData];
 
-        return new Promise((resolve) => {
-            chrome.runtime.sendMessage({
+        return chrome.runtime.sendMessage({
                 action: "scraped-data",
                 data: dataToSend,
                 params: Array.from(allParamNames)
-            })
-                .then(response => {
-                    if (response && response.received) {
-                        // Only clear the buffer after successful transmission
-                        intermediateData = [];
-                        // console.log(`${LOG_PREFIX} Background script acknowledged data receipt.`);
-                        resolve(true);
-                    } else {
-                        console.warn(`${LOG_PREFIX} Background script did not acknowledge data receipt properly. Data preserved for retry.`);
-                        resolve(false);
-                    }
-                })
-                .catch(error => {
-                    console.error(`${LOG_PREFIX} Error sending data chunk:`, error);
-                    console.warn(`${LOG_PREFIX} Data preserved for retry after error.`);
-                    resolve(false);
-                });
+        }).then(response => {
+             if (response?.received) {
+                 intermediateData = [];
+                 return true;
+             }
+             console.warn(`${LOG_PREFIX} Background script did not acknowledge data receipt properly. Data preserved for retry.`);
+             return false;
+        }).catch(error => {
+            console.error(`${LOG_PREFIX} Error sending data chunk:`, error);
+            console.warn(`${LOG_PREFIX} Data preserved for retry after error.`);
+            return false;
         });
     }
 

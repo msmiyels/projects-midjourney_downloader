@@ -3,6 +3,7 @@
 
 // --- Global State (Managed by Service Worker) ---
 let collectedData = [];         // Stores unique scraped items
+let collectedParams = new Set();
 let uploadedData = [];          // Stores raw uploaded items before processing for download
 let processedUploadedDataInfo = null; // Stores { headers: [], actions: [], count: 0 } after upload processing
 let isScraping = false;
