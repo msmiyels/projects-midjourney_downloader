@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Midjourney Scraper Extension",
+  "version": "0.1.0",
+  "description": "Starts auto-scrolling on Midjourney and collects image data.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "downloads"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.midjourney.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
