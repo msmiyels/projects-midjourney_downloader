@@ -510,22 +510,27 @@ downloadCsvButton.addEventListener('click', () => {
         // Generic response handling that works for both actions
         if (response) {
             switch (response.status) {
-                case "download_started":
+                case "download_started": {
                     updateStatus(finalStatusSection, "CSV download started.", null, 'success');
                     break;
-                case "image_downloads_initiated":
+                }
+                case "image_downloads_initiated": {
                     updateStatus(finalStatusSection, `Started download of ${response.totalToDownload} images...`, null, 'info');
                     break;
-                case "no_data":
+                }
+                case "no_data": {
                     updateStatus(finalStatusSection, `No data found matching criteria.`, null, 'warning');
                     break;
-                case "error":
+                }
+                case "error": {
                     console.error("Download failed in background:", response.message);
                     updateStatus(finalStatusSection, `Download Error: ${response.message || 'Unknown'}`, null, 'error');
                     break;
-                default:
+                }
+                default: {
                     console.warn("Unexpected download response:", response);
                     updateStatus(finalStatusSection, "Download failed (check console).", null, 'error');
+                }
             }
         } else {
             updateStatus(finalStatusSection, "No response from background.", null, 'error');
