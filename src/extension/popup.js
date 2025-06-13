@@ -591,10 +591,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // More cases here...
     }
 });
-    // No need to return anything here as we're not using sendResponse asynchronously
-    // The message channel will be closed automatically
-});
-
 
 /**
  * Requests the current extension state from the background script and updates the popup UI accordingly.

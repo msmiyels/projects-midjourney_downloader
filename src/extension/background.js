@@ -309,8 +309,6 @@ function generateCsvString(options) {
                             } else {
                                 value = modifiedFilename;
                             }
-                        } else {
-                            value = originalUrl;
                         }
                     }
                 } else if (source === 'scraper' && row.jobParams && Object.hasOwn(row.jobParams, header)) {
@@ -374,361 +372,373 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     switch (message.action) {
         case "get-status":
-            sendResponse({
-                status: currentStatus,
-                count: collectedData.length,
-                isRunning: isScraping,
-                hasData: collectedData.length > 0,
-                uploadData: processedUploadedDataInfo
-            });
+            {
+                sendResponse({
+                    status: currentStatus,
+                    count: collectedData.length,
+                    isRunning: isScraping,
+                    hasData: collectedData.length > 0,
+                    uploadData: processedUploadedDataInfo
+                });
+            }
             break;
 
         case "content_script_ready":
-            if (sender.tab && sender.tab.id) {
-                log('log', `Content script in tab ${sender.tab.id} reported ready.`);
-                readyContentScripts.add(sender.tab.id);
-            } else {
-                log('warn', "Received 'content_script_ready' but sender tab ID is missing.");
+            {
+                if (sender.tab && sender.tab.id) {
+                    log('log', `Content script in tab ${sender.tab.id} reported ready.`);
+                    readyContentScripts.add(sender.tab.id);
+                } else {
+                    log('warn', "Received 'content_script_ready' but sender tab ID is missing.");
+                }
             }
             break;
 
         case "check_content_script_ready":
-            if (message.tabId) {
-                const isReady = readyContentScripts.has(message.tabId);
-                log('log', `Checking readiness for tab ${message.tabId}: ${isReady}`);
-                sendResponse({ isReady: isReady });
-            } else {
-                log('warn', "Received 'check_content_script_ready' but message.tabId is missing.");
-                sendResponse({ isReady: false, error: "tabId missing" });
+            {
+                if (message.tabId) {
+                    const isReady = readyContentScripts.has(message.tabId);
+                    log('log', `Checking readiness for tab ${message.tabId}: ${isReady}`);
+                    sendResponse({ isReady: isReady });
+                } else {
+                    log('warn', "Received 'check_content_script_ready' but message.tabId is missing.");
+                    sendResponse({ isReady: false, error: "tabId missing" });
+                }
             }
             break;
 
         case "process-uploaded-csv": {
-            log('log', "Received request to process uploaded CSV.");
-            isAsyncResponse = true;
-            uploadedData = [];
-            processedUploadedDataInfo = null;
+            {
+                log('log', "Received request to process uploaded CSV.");
+                isAsyncResponse = true;
+                uploadedData = [];
+                processedUploadedDataInfo = null;
 
-            try {
-                sendResponse({ status: "processing_started" });
-            } catch (e) {
-                log('warn', "Could not send 'processing_started' immediately.", e.message);
-            }
-
-            (async () => {
-                let responsePayload = { action: "upload_processed_result" };
                 try {
-                    if (!message.content || typeof message.content !== 'string' || message.content.trim() === '') {
-                        throw new Error("No CSV content received or content is empty.");
-                    }
-                    const lines = message.content.split(/\r?\n/);
-                    if (lines.length < 1) throw new Error("CSV content has no lines.");
-
-                    const headerLine = lines[0].trim();
-                    const rawHeaders = parseCsvLine(headerLine);
-                    if (rawHeaders.length === 0 || rawHeaders.every(h => !h || h.trim() === '')) {
-                        throw new Error("No valid headers found in CSV.");
-                    }
-                    const headers = rawHeaders.map(h => h.trim()); // Trim headers
-
-                    uploadedData = [];
-                    for (let i = 1; i < lines.length; i++) {
-                        const line = lines[i].trim();
-                        if (line === '') continue;
-                        const values = parseCsvLine(line);
-                        if (values.length > 0 && values.some(val => val && val.trim() !== '')) {
-                            const rowObject = {};
-                            headers.forEach((header, index) => { // Use trimmed headers
-                                if (header.length > 0) { // Ensure header itself is not empty after trim
-                                    rowObject[header] = index < values.length ? values[index] : undefined;
-                                }
-                            });
-                            if (Object.keys(rowObject).length > 0) {
-                                uploadedData.push(rowObject);
-                            }
-                        }
-                    }
-                    log('log', `Parsed ${uploadedData.length} data rows from uploaded CSV.`);
-                    const totalRows = uploadedData.length;
-
-                    let validUrlHeaders = [];
-                    if (headers.length > 0 && totalRows > 0) {
-                        validUrlHeaders = headers.filter(header => {
-                            if (!header) return false; // Already trimmed
-                            const rowsToScan = Math.min(totalRows, 20);
-                            for (let i = 0; i < rowsToScan; i++) {
-                                const item = uploadedData[i];
-                                if (item && Object.hasOwn(item, header)) {
-                                    const value = String(item[header]);
-                                    if (value.startsWith('http://') || value.startsWith('https://')) {
-                                        return true;
-                                    }
-                                }
-                            }
-                            return false;
-                        });
-                    }
-                    log('log', `Found valid URL headers: [${validUrlHeaders.join(', ')}]`);
-
-                    const urlCountsPerColumn = {};
-                    if (totalRows > 0) {
-                        validUrlHeaders.forEach(validHeader => {
-                            let count = 0;
-                            uploadedData.forEach(item => {
-                                if (item && Object.hasOwn(item, validHeader)) {
-                                    const value = String(item[validHeader]);
-                                    if (value.startsWith('http://') || value.startsWith('https://')) {
-                                        count++;
-                                    }
-                                }
-                            });
-                            urlCountsPerColumn[validHeader] = count;
-                        });
-                    }
-                    log('log', 'URL counts per valid column:', urlCountsPerColumn);
-
-                    const actionsSet = new Set();
-                    const actionColumnKey = 'action';
-                    if (headers.includes(actionColumnKey)) {
-                        uploadedData.forEach(item => {
-                            if (item && item[actionColumnKey] && typeof item[actionColumnKey] === 'string' && item[actionColumnKey].trim() !== '') {
-                                actionsSet.add(item[actionColumnKey].trim());
-                            }
-                        });
-                    } else {
-                        log('warn', `Action column ('${actionColumnKey}') not found in uploaded CSV headers.`);
-                    }
-
-                    processedUploadedDataInfo = {
-                        headers: headers, // Use trimmed headers
-                        validUrlHeaders: validUrlHeaders,
-                        urlCountsPerColumn: urlCountsPerColumn,
-                        totalRows: totalRows,
-                        actions: Array.from(actionsSet).sort(),
-                        count: totalRows
-                    };
-                    responsePayload.status = 'success';
-                    responsePayload.result = processedUploadedDataInfo;
-                    currentStatus = `Processed ${processedUploadedDataInfo.count} CSV rows`;
-                } catch (error) {
-                    log('error', "Error processing uploaded CSV:", error);
-                    responsePayload.status = 'error';
-                    responsePayload.message = error.message || "Unknown CSV processing error.";
-                    currentStatus = "Upload Processing Error";
-                    processedUploadedDataInfo = null;
-                    uploadedData = [];
-                } finally {
-                    log('debug', "Sending upload processed result to all listeners:", responsePayload);
-                    chrome.runtime.sendMessage(responsePayload).catch(e => {
-                        if (!e.message.includes("Could not establish connection") && !e.message.includes("Receiving end does not exist")) {
-                            log('warn', "Error sending 'upload_processed_result' message:", e.message);
-                        }
-                    });
-                    broadcastStatus();
+                    sendResponse({ status: "processing_started" });
+                } catch (e) {
+                    log('warn', "Could not send 'processing_started' immediately.", e.message);
                 }
-            })();
+
+                (async () => {
+                    let responsePayload = { action: "upload_processed_result" };
+                    try {
+                        if (!message.content || typeof message.content !== 'string' || message.content.trim() === '') {
+                            throw new Error("No CSV content received or content is empty.");
+                        }
+                        const lines = message.content.split(/\r?\n/);
+                        if (lines.length < 1) throw new Error("CSV content has no lines.");
+
+                        const headerLine = lines[0].trim();
+                        const rawHeaders = parseCsvLine(headerLine);
+                        if (rawHeaders.length === 0 || rawHeaders.every(h => !h || h.trim() === '')) {
+                            throw new Error("No valid headers found in CSV.");
+                        }
+                        const headers = rawHeaders.map(h => h.trim()); // Trim headers
+
+                        uploadedData = [];
+                        for (let i = 1; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (line === '') continue;
+                            const values = parseCsvLine(line);
+                            if (values.length > 0 && values.some(val => val && val.trim() !== '')) {
+                                const rowObject = {};
+                                headers.forEach((header, index) => { // Use trimmed headers
+                                    if (header.length > 0) { // Ensure header itself is not empty after trim
+                                        rowObject[header] = index < values.length ? values[index] : undefined;
+                                    }
+                                });
+                                if (Object.keys(rowObject).length > 0) {
+                                    uploadedData.push(rowObject);
+                                }
+                            }
+                        }
+                        log('log', `Parsed ${uploadedData.length} data rows from uploaded CSV.`);
+                        const totalRows = uploadedData.length;
+
+                        let validUrlHeaders = [];
+                        if (headers.length > 0 && totalRows > 0) {
+                            validUrlHeaders = headers.filter(header => {
+                                if (!header) return false; // Already trimmed
+                                const rowsToScan = Math.min(totalRows, 20);
+                                for (let i = 0; i < rowsToScan; i++) {
+                                    const item = uploadedData[i];
+                                    if (item && Object.hasOwn(item, header)) {
+                                        const value = String(item[header]);
+                                        if (value.startsWith('http://') || value.startsWith('https://')) {
+                                            return true;
+                                        }
+                                    }
+                                }
+                                return false;
+                            });
+                        }
+                        log('log', `Found valid URL headers: [${validUrlHeaders.join(', ')}]`);
+
+                        const urlCountsPerColumn = {};
+                        if (totalRows > 0) {
+                            validUrlHeaders.forEach(validHeader => {
+                                let count = 0;
+                                uploadedData.forEach(item => {
+                                    if (item && Object.hasOwn(item, validHeader)) {
+                                        const value = String(item[validHeader]);
+                                        if (value.startsWith('http://') || value.startsWith('https://')) {
+                                            count++;
+                                        }
+                                    }
+                                });
+                                urlCountsPerColumn[validHeader] = count;
+                            });
+                        }
+                        log('log', 'URL counts per valid column:', urlCountsPerColumn);
+
+                        const actionsSet = new Set();
+                        const actionColumnKey = 'action';
+                        if (headers.includes(actionColumnKey)) {
+                            uploadedData.forEach(item => {
+                                if (item && item[actionColumnKey] && typeof item[actionColumnKey] === 'string' && item[actionColumnKey].trim() !== '') {
+                                    actionsSet.add(item[actionColumnKey].trim());
+                                }
+                            });
+                        } else {
+                            log('warn', `Action column ('${actionColumnKey}') not found in uploaded CSV headers.`);
+                        }
+
+                        processedUploadedDataInfo = {
+                            headers: headers, // Use trimmed headers
+                            validUrlHeaders: validUrlHeaders,
+                            urlCountsPerColumn: urlCountsPerColumn,
+                            totalRows: totalRows,
+                            actions: Array.from(actionsSet).sort(),
+                            count: totalRows
+                        };
+                        responsePayload.status = 'success';
+                        responsePayload.result = processedUploadedDataInfo;
+                        currentStatus = `Processed ${processedUploadedDataInfo.count} CSV rows`;
+                    } catch (error) {
+                        log('error', "Error processing uploaded CSV:", error);
+                        responsePayload.status = 'error';
+                        responsePayload.message = error.message || "Unknown CSV processing error.";
+                        currentStatus = "Upload Processing Error";
+                        processedUploadedDataInfo = null;
+                        uploadedData = [];
+                    } finally {
+                        log('debug', "Sending upload processed result to all listeners:", responsePayload);
+                        chrome.runtime.sendMessage(responsePayload).catch(e => {
+                            if (!e.message.includes("Could not establish connection") && !e.message.includes("Receiving end does not exist")) {
+                                log('warn', "Error sending 'upload_processed_result' message:", e.message);
+                            }
+                        });
+                        broadcastStatus();
+                    }
+                })();
+            }
             return true; // Keep channel open for async IIFE
         }
 
         case "download-csv": {
-            isAsyncResponse = true;
-            const csvDownloadOptions = message.options || {};
-            const csvSource = csvDownloadOptions.source || 'scraper';
-            log('log', `CSV Download request for source: ${csvSource}`, csvDownloadOptions);
+            {
+                isAsyncResponse = true;
+                const csvDownloadOptions = message.options || {};
+                const csvSource = csvDownloadOptions.source || 'scraper';
+                log('log', `CSV Download request for source: ${csvSource}`, csvDownloadOptions);
 
-            let csvDataAvailable = false;
-            if (csvSource === 'scraper' && collectedData && collectedData.length > 0) {
-                csvDataAvailable = true;
-            } else if (csvSource === 'upload' && uploadedData && uploadedData.length > 0 && processedUploadedDataInfo) {
-                csvDataAvailable = true;
-            }
-
-            if (!csvDataAvailable) {
-                log('warn', `CSV Download: No initial data for source '${csvSource}'.`);
-                currentStatus = `Idle - No data for ${csvSource} CSV`;
-                broadcastStatus();
-                sendResponse({ status: "no_data", message: `No initial data for ${csvSource} CSV.` });
-                break;
-            }
-
-            currentStatus = `Generating ${csvSource === 'upload' ? 'Upload Data' : 'Scraper'} CSV...`;
-            broadcastStatus();
-
-            try {
-                const csvContent = generateCsvString(csvDownloadOptions);
-                const contentToCheck = csvContent.replace("\uFEFF", "").trim();
-                const linesInCsv = contentToCheck.split('\n');
-                const headersOnlyInCsv = linesInCsv.length === 1 && (processedUploadedDataInfo?.headers?.join(',') === linesInCsv[0] || collectedParams?.size > 0);
-
-                if (!contentToCheck || (linesInCsv.length <= 1 && !headersOnlyInCsv && linesInCsv[0].trim() === '')) {
-                    log('warn', `CSV content for '${csvSource}' is effectively empty. No download.`);
-                    currentStatus = "Idle - No data after filtering";
-                    broadcastStatus();
-                    sendResponse({ status: "no_data", message: "No data for CSV after filtering." });
-                    return isAsyncResponse;
+                let csvDataAvailable = false;
+                if (csvSource === 'scraper' && collectedData && collectedData.length > 0) {
+                    csvDataAvailable = true;
+                } else if (csvSource === 'upload' && uploadedData && uploadedData.length > 0 && processedUploadedDataInfo) {
+                    csvDataAvailable = true;
                 }
 
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const reader = new FileReader();
+                if (!csvDataAvailable) {
+                    log('warn', `CSV Download: No initial data for source '${csvSource}'.`);
+                    currentStatus = `Idle - No data for ${csvSource} CSV`;
+                    broadcastStatus();
+                    sendResponse({ status: "no_data", message: `No initial data for ${csvSource} CSV.` });
+                    break;
+                }
 
-                reader.onload = function () {
-                    const dataUrl = reader.result;
-                    const now = new Date();
-                    const dateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
-                    const filename = `midjourney_export_${csvSource}_${dateStr}.csv`;
+                currentStatus = `Generating ${csvSource === 'upload' ? 'Upload Data' : 'Scraper'} CSV...`;
+                broadcastStatus();
 
-                    chrome.downloads.download({
-                        url: dataUrl,
-                        filename: filename,
-                        saveAs: true
-                    }).then((downloadId) => {
-                        if (downloadId) {
-                            log('log', `CSV Download started (ID: ${downloadId}) for ${csvSource}.`);
-                            currentStatus = "Idle";
-                            sendResponse({ status: "download_started", message: "CSV download started." });
-                        } else {
-                            log('warn', `CSV Download failed to start (no ID) for ${csvSource}. User might have cancelled.`);
-                            currentStatus = "Download Failed";
-                            sendResponse({ status: "error", message: "CSV download failed or was cancelled." });
-                        }
+                try {
+                    const csvContent = generateCsvString(csvDownloadOptions);
+                    const contentToCheck = csvContent.replace("\uFEFF", "").trim();
+                    const linesInCsv = contentToCheck.split('\n');
+                    const headersOnlyInCsv = linesInCsv.length === 1 && (processedUploadedDataInfo?.headers?.join(',') === linesInCsv[0] || collectedParams?.size > 0);
+
+                    if (!contentToCheck || (linesInCsv.length <= 1 && !headersOnlyInCsv && linesInCsv[0].trim() === '')) {
+                        log('warn', `CSV content for '${csvSource}' is effectively empty. No download.`);
+                        currentStatus = "Idle - No data after filtering";
                         broadcastStatus();
-                    }).catch(error => {
-                        log('error', `CSV Download failed for ${csvSource}:`, error);
+                        sendResponse({ status: "no_data", message: "No data for CSV after filtering." });
+                        return isAsyncResponse;
+                    }
+
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const reader = new FileReader();
+
+                    reader.onload = function () {
+                        const dataUrl = reader.result;
+                        const now = new Date();
+                        const dateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+                        const filename = `midjourney_export_${csvSource}_${dateStr}.csv`;
+
+                        chrome.downloads.download({
+                            url: dataUrl,
+                            filename: filename,
+                            saveAs: true
+                        }).then((downloadId) => {
+                            if (downloadId) {
+                                log('log', `CSV Download started (ID: ${downloadId}) for ${csvSource}.`);
+                                currentStatus = "Idle";
+                                sendResponse({ status: "download_started", message: "CSV download started." });
+                            } else {
+                                log('warn', `CSV Download failed to start (no ID) for ${csvSource}. User might have cancelled.`);
+                                currentStatus = "Download Failed";
+                                sendResponse({ status: "error", message: "CSV download failed or was cancelled." });
+                            }
+                            broadcastStatus();
+                        }).catch(error => {
+                            log('error', `CSV Download failed for ${csvSource}:`, error);
+                            currentStatus = "Download Failed";
+                            broadcastStatus();
+                            sendResponse({ status: "error", message: `Download failed: ${error.message}` });
+                        });
+                    };
+
+                    reader.onerror = function () {
+                        log('error', `FileReader error for ${csvSource} CSV:`, reader.error);
                         currentStatus = "Download Failed";
                         broadcastStatus();
-                        sendResponse({ status: "error", message: `Download failed: ${error.message}` });
-                    });
-                };
+                        sendResponse({ status: "error", message: `File reading failed: ${reader.error?.message || 'Unknown error'}` });
+                    };
 
-                reader.onerror = function () {
-                    log('error', `FileReader error for ${csvSource} CSV:`, reader.error);
-                    currentStatus = "Download Failed";
+                    reader.readAsDataURL(blob);
+                } catch (error) {
+                    log('error', `Synchronous error during CSV prep for ${csvSource}:`, error);
+                    currentStatus = "Download Prep Error";
                     broadcastStatus();
-                    sendResponse({ status: "error", message: `File reading failed: ${reader.error?.message || 'Unknown error'}` });
-                };
-
-                reader.readAsDataURL(blob);
-            } catch (error) {
-                log('error', `Synchronous error during CSV prep for ${csvSource}:`, error);
-                currentStatus = "Download Prep Error";
-                broadcastStatus();
-                try { sendResponse({ status: "error", message: `CSV preparation failed: ${error.message}` }); }
-                catch (e) { log('error', "Failed to send error for sync CSV prep error", e); }
+                    try { sendResponse({ status: "error", message: `CSV preparation failed: ${error.message}` }); }
+                    catch (e) { log('error', "Failed to send error for sync CSV prep error", e); }
+                }
             }
             break;
         }
 
         case "start-image-download": {
-            isAsyncResponse = true;
-            const imageOptions = message.options || {};
-            log('log', `Image download request with options:`, imageOptions);
-
-            if (!uploadedData || uploadedData.length === 0 || !processedUploadedDataInfo) {
-                log('warn', "Image download: No uploaded data.");
-                sendResponse({ status: "no_data", message: "No uploaded data for image download." });
-                break;
-            }
-            const selectedUrlColImg = imageOptions.urlColumn;
-            if (!selectedUrlColImg) {
-                log('error', "Image download: No URL column specified.");
-                sendResponse({ status: "error", message: "URL column not specified for images." });
-                break;
-            }
-
-            // Filterlogik bleibt unverändert
-            let imagesToDownload = [...uploadedData].filter(row => {
-                if (row && Object.hasOwn(row, selectedUrlColImg)) {
-                    const value = String(row[selectedUrlColImg]);
-                    return value.startsWith('http://') || value.startsWith('https://');
-                }
-                return false;
-            });
-            const actionColKeyImg = 'action';
-            if (imageOptions.actionFilters && imageOptions.actionFilters.length > 0 && Object.hasOwn(imagesToDownload[0], actionColKeyImg)) {
-                imagesToDownload = imagesToDownload.filter(item =>
-                    item && Object.hasOwn(item, actionColKeyImg) && imageOptions.actionFilters.includes(item[actionColKeyImg])
-                );
-            }
-            if (imageOptions.limit && imageOptions.limit > 0 && imageOptions.limit < imagesToDownload.length) {
-                imagesToDownload = imagesToDownload.slice(0, imageOptions.limit);
-            }
-
-            if (imagesToDownload.length === 0) {
-                log('warn', "Image download: No images after filtering.");
-                sendResponse({ status: "no_data", message: "No images match criteria." });
-                break;
-            }
-
-            // *** BEGINN DER NEUEN, KORRIGIERTEN DOWNLOAD-LOGIK ***
             {
-                // Anonyme asynchrone Funktion, um 'await' nutzen zu können
-                (async () => {
-                    let successCount = 0;
-                    let failureCount = 0;
-                    const totalToDownload = imagesToDownload.length;
+                isAsyncResponse = true;
+                const imageOptions = message.options || {};
+                log('log', `Image download request with options:`, imageOptions);
 
-                    currentStatus = `Starte Download von ${totalToDownload} Bildern...`;
-                    broadcastStatus();
-                    try {
-                        sendResponse({ status: "image_downloads_initiated", message: `Starte Download von ${totalToDownload} Bildern...`, totalToDownload: totalToDownload });
-                    } catch (e) {
-                        log('warn', 'sendResponse für image_downloads_initiated fehlgeschlagen (Popup evtl. schon zu)');
+                if (!uploadedData || uploadedData.length === 0 || !processedUploadedDataInfo) {
+                    log('warn', "Image download: No uploaded data.");
+                    sendResponse({ status: "no_data", message: "No uploaded data for image download." });
+                    break;
+                }
+                const selectedUrlColImg = imageOptions.urlColumn;
+                if (!selectedUrlColImg) {
+                    log('error', "Image download: No URL column specified.");
+                    sendResponse({ status: "error", message: "URL column not specified for images." });
+                    break;
+                }
+
+                // Filterlogik bleibt unverändert
+                let imagesToDownload = [...uploadedData].filter(row => {
+                    if (row && Object.hasOwn(row, selectedUrlColImg)) {
+                        const value = String(row[selectedUrlColImg]);
+                        return value.startsWith('http://') || value.startsWith('https://');
                     }
+                    return false;
+                });
+                const actionColKeyImg = 'action';
+                if (imageOptions.actionFilters && imageOptions.actionFilters.length > 0 && Object.hasOwn(imagesToDownload[0], actionColKeyImg)) {
+                    imagesToDownload = imagesToDownload.filter(item =>
+                        item && Object.hasOwn(item, actionColKeyImg) && imageOptions.actionFilters.includes(item[actionColKeyImg])
+                    );
+                }
+                if (imageOptions.limit && imageOptions.limit > 0 && imageOptions.limit < imagesToDownload.length) {
+                    imagesToDownload = imagesToDownload.slice(0, imageOptions.limit);
+                }
 
-                    // SEQUENZIELLE SCHLEIFE: Behebt das Stottern und ermöglicht Live-Feedback
-                    for (const [index, row] of imagesToDownload.entries()) {
-                        let finalFilename = null;
+                if (imagesToDownload.length === 0) {
+                    log('warn', "Image download: No images after filtering.");
+                    sendResponse({ status: "no_data", message: "No images match criteria." });
+                    break;
+                }
 
-                        // ROBUSTE DATEINAMEN-LOGIK: Behebt das .txt-Problem
+                // *** BEGINN DER NEUEN, KORRIGIERTEN DOWNLOAD-LOGIK ***
+                {
+                    // Anonyme asynchrone Funktion, um 'await' nutzen zu können
+                    (async () => {
+                        let successCount = 0;
+                        let failureCount = 0;
+                        const totalToDownload = imagesToDownload.length;
+
+                        currentStatus = `Starte Download von ${totalToDownload} Bildern...`;
+                        broadcastStatus();
                         try {
-                            const imageUrl = row[selectedUrlColImg];
-                            const urlObj = new URL(imageUrl);
-                            const originalFilename = decodeURIComponent(urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1).split('?')[0]);
+                            sendResponse({ status: "image_downloads_initiated", message: `Starte Download von ${totalToDownload} Bildern...`, totalToDownload: totalToDownload });
+                        } catch (e) {
+                            log('warn', 'sendResponse für image_downloads_initiated fehlgeschlagen (Popup evtl. schon zu)');
+                        }
 
-                            if (originalFilename && originalFilename.includes('.')) {
-                                const lastDotIndex = originalFilename.lastIndexOf('.');
-                                const nameStem = originalFilename.substring(0, lastDotIndex);
-                                const nameExtension = originalFilename.substring(lastDotIndex);
-                                const stemParts = nameStem.split('_');
-                                let modifiedStem = nameStem;
-                                if (stemParts.length >= 3) {
-                                    modifiedStem = stemParts.slice(0, 2).join('_');
+                        // SEQUENZIELLE SCHLEIFE: Behebt das Stottern und ermöglicht Live-Feedback
+                        for (const [index, row] of imagesToDownload.entries()) {
+                            let finalFilename = null;
+
+                            // ROBUSTE DATEINAMEN-LOGIK: Behebt das .txt-Problem
+                            try {
+                                const imageUrl = row[selectedUrlColImg];
+                                const urlObj = new URL(imageUrl);
+                                const originalFilename = decodeURIComponent(urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1).split('?')[0]);
+
+                                if (originalFilename && originalFilename.includes('.')) {
+                                    const lastDotIndex = originalFilename.lastIndexOf('.');
+                                    const nameStem = originalFilename.substring(0, lastDotIndex);
+                                    const nameExtension = originalFilename.substring(lastDotIndex);
+                                    const stemParts = nameStem.split('_');
+                                    let modifiedStem = nameStem;
+                                    if (stemParts.length >= 3) {
+                                        modifiedStem = stemParts.slice(0, 2).join('_');
+                                    }
+                                    const modifiedFilename = modifiedStem + nameExtension;
+                                    const jobId = row['job_id'] || '';
+                                    finalFilename = `${jobId}_${modifiedFilename}`;
+                                } else {
+                                    log('error', `Konnte keinen Dateinamen mit Endung aus der URL extrahieren, überspringe: ${imageUrl}`);
+                                    failureCount++;
+                                    continue; // Nächste Iteration
                                 }
-                                const modifiedFilename = modifiedStem + nameExtension;
-                                const jobId = row['job_id'] || '';
-                                finalFilename = `${jobId}_${modifiedFilename}`;
-                            } else {
-                                log('error', `Konnte keinen Dateinamen mit Endung aus der URL extrahieren, überspringe: ${imageUrl}`);
+                            } catch (e) {
+                                log('error', `Fehler bei URL-Verarbeitung, überspringe: ${row[selectedUrlColImg]}`, e);
                                 failureCount++;
                                 continue; // Nächste Iteration
                             }
-                        } catch (e) {
-                            log('error', `Fehler bei URL-Verarbeitung, überspringe: ${row[selectedUrlColImg]}`, e);
-                            failureCount++;
-                            continue; // Nächste Iteration
+
+                            // Status-Update VOR jedem Download
+                            currentStatus = `(${index + 1}/${totalToDownload}) Wird heruntergeladen...`;
+                            broadcastStatus({ currentItem: finalFilename });
+
+                            try {
+                                // 'await' stellt sicher, dass ein Download abgeschlossen ist, bevor der nächste startet
+                                const downloadId = await chrome.downloads.download({
+                                    url: row[selectedUrlColImg],
+                                    filename: finalFilename.replace(/__+/g, '_')
+                                });
+                                if (downloadId) { successCount++; } else { failureCount++; }
+                            } catch (err) {
+                                failureCount++;
+                                log('error', `Fehler beim Download von ${finalFilename}:`, err.message || err);
+                            }
                         }
 
-                        // Status-Update VOR jedem Download
-                        currentStatus = `(${index + 1}/${totalToDownload}) Wird heruntergeladen...`;
-                        broadcastStatus({ currentItem: finalFilename });
-
-                        try {
-                            // 'await' stellt sicher, dass ein Download abgeschlossen ist, bevor der nächste startet
-                            const downloadId = await chrome.downloads.download({
-                                url: row[selectedUrlColImg],
-                                filename: finalFilename.replace(/__+/g, '_')
-                            });
-                            if (downloadId) { successCount++; } else { failureCount++; }
-                        } catch (err) {
-                            failureCount++;
-                            log('error', `Fehler beim Download von ${finalFilename}:`, err.message || err);
-                        }
-                    }
-
-                    // Finaler Status
-                    currentStatus = `Download abgeschlossen: ${successCount}/${totalToDownload} erfolgreich.`;
-                    broadcastStatus({ currentItem: null });
-                })();
+                        // Finaler Status
+                        currentStatus = `Download abgeschlossen: ${successCount}/${totalToDownload} erfolgreich.`;
+                        broadcastStatus({ currentItem: null });
+                    })();
+                }
             }
             break;
         }
@@ -740,38 +750,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             break;
         }
         case "scraped-data":
-            if (message.data && message.data.length > 0) {
-                const combinedData = [...collectedData, ...message.data];
-                collectedData = deduplicateDataByOriginalURL(combinedData);
+            {
+                if (message.data && message.data.length > 0) {
+                    const combinedData = [...collectedData, ...message.data];
+                    collectedData = deduplicateDataByOriginalURL(combinedData);
+                }
+                if (message.params && Array.isArray(message.params)) {
+                    message.params.forEach(param => (collectedParams || (collectedParams = new Set())).add(param));
+                }
+                currentStatus = isScraping ? "Running..." : "Processing Data...";
+                broadcastStatus();
+                sendResponse({ received: true });
             }
-            if (message.params && Array.isArray(message.params)) {
-                message.params.forEach(param => (collectedParams || (collectedParams = new Set())).add(param));
-            }
-            currentStatus = isScraping ? "Running..." : "Processing Data...";
-            broadcastStatus();
-            sendResponse({ received: true });
             break;
 
         case "clear-data":
-            log('log', "Clearing collected SCRAPED data and params.");
-            collectedData = [];
-            collectedParams = new Set();
-            currentStatus = "Idle";
-            if (isScraping) { // Wenn Scraping lief, setze es zurück
-                isScraping = false;
-                // Sende Stopp-Signal an Content-Script, falls es noch aktiv sein könnte (optional, aber sauber)
-                chrome.tabs.query({ active: true, url: "*://*.midjourney.com/*" }, (tabs) => {
-                    if (tabs && tabs.length > 0) {
-                        chrome.tabs.sendMessage(tabs[0].id, { action: "stop-scraping" }).catch(e => log('warn', 'Failed to send stop-scraping on clear-data', e.message));
-                    }
-                });
+            {
+                log('log', "Clearing collected SCRAPED data and params.");
+                collectedData = [];
+                collectedParams = new Set();
+                currentStatus = "Idle";
+                if (isScraping) { // Wenn Scraping lief, setze es zurück
+                    isScraping = false;
+                    // Sende Stopp-Signal an Content-Script, falls es noch aktiv sein könnte (optional, aber sauber)
+                    chrome.tabs.query({ active: true, url: "*://*.midjourney.com/*" }, (tabs) => {
+                        if (tabs && tabs.length > 0) {
+                            chrome.tabs.sendMessage(tabs[0].id, { action: "stop-scraping" }).catch(e => log('warn', 'Failed to send stop-scraping on clear-data', e.message));
+                        }
+                    });
+                }
+                broadcastStatus();
+                sendResponse({ cleared: true });
             }
-            broadcastStatus();
-            sendResponse({ cleared: true });
             break;
 
         default:
-            log('warn', `Unknown message action received: ${message.action}`);
+            {
+                log('warn', `Unknown message action received: ${message.action}`);
+            }
             break;
     }
     return isAsyncResponse;

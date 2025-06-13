@@ -99,27 +99,28 @@
      * Sends the buffered scraped data and collected parameter names to the background script.
      *
      * Only clears the data buffer after receiving confirmation of successful receipt from the background script.
-     * Logs a warning if the background script does not acknowledge receipt.
+     * Logs a warning if the background script does not acknowledge receipt properly.
      */
     function sendDataChunk() {
         if (intermediateData.length === 0) {
-            return; // Nothing to send
+            return Promise.resolve(true); // Nothing to send
         }
 
         console.log(`${LOG_PREFIX} Preparing to send ${intermediateData.length} data items to background.`);
         const dataToSend = [...intermediateData];
 
         return chrome.runtime.sendMessage({
-                action: "scraped-data",
-                data: dataToSend,
-                params: Array.from(allParamNames)
+            action: "scraped-data",
+            data: dataToSend,
+            params: Array.from(allParamNames)
         }).then(response => {
-             if (response?.received) {
-                 intermediateData = [];
-                 return true;
-             }
-             console.warn(`${LOG_PREFIX} Background script did not acknowledge data receipt properly. Data preserved for retry.`);
-             return false;
+            if (response?.received) {
+                // Only clear the buffer after successful acknowledgment
+                intermediateData = [];
+                return true;
+            }
+            console.warn(`${LOG_PREFIX} Background script did not acknowledge data receipt properly. Data preserved for retry.`);
+            return false;
         }).catch(error => {
             console.error(`${LOG_PREFIX} Error sending data chunk:`, error);
             console.warn(`${LOG_PREFIX} Data preserved for retry after error.`);
@@ -468,22 +469,28 @@
         try {
             switch (message.action) {
                 case "start-scraping": {
-                    // Call start function and send its response back
-                    const startResponse = startScraping();
-                    sendResponse(startResponse);
+                    {
+                        // Call start function and send its response back
+                        const startResponse = startScraping();
+                        sendResponse(startResponse);
+                    }
                     break; // Exit switch
                 }
 
                 case "stop-scraping": {
-                    // Call stop function and send its response back
-                    const stopResponse = stopScraping(false);
-                    sendResponse(stopResponse);
+                    {
+                        // Call stop function and send its response back
+                        const stopResponse = stopScraping(false);
+                        sendResponse(stopResponse);
+                    }
                     break; // Exit switch
                 }
 
                 default: {
-                    console.warn(`${LOG_PREFIX} Unknown message action received:`, message.action);
-                    // No response needed for unknown actions
+                    {
+                        console.warn(`${LOG_PREFIX} Unknown message action received:`, message.action);
+                        // No response needed for unknown actions
+                    }
                     break; // Exit switch
                 }
             }
