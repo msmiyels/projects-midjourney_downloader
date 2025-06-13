@@ -21,7 +21,7 @@ const statusUploadDiv = document.getElementById('statusUpload');
 const dataCountUploadP = document.getElementById('dataCountUpload');
 const noFiltersPlaceholder = document.querySelector('.no-filters-placeholder');
 const downloadCsvButton = document.getElementById('downloadCsvButton');
-const currentFileStatusP = document.getElementById('currentFileStatus'); // NEUE ZEILE
+const currentFileStatusP = document.getElementById('currentFileStatus');
 
 // --- State Variables ---
 let currentDataSource = 'none'; // 'scraper', 'upload', or 'none'
@@ -58,8 +58,8 @@ async function checkActiveTabAndUpdateScraperUI() {
         isImaginePage = false;
         if (scraperControlsContainer) scraperControlsContainer.classList.add('hidden');
         if (scraperWrongPageMsg) {
-             scraperWrongPageMsg.textContent = "Error checking current page.";
-             scraperWrongPageMsg.classList.remove('hidden');
+            scraperWrongPageMsg.textContent = "Error checking current page.";
+            scraperWrongPageMsg.classList.remove('hidden');
         }
         return false;
     }
@@ -84,7 +84,7 @@ async function showTab(tabId) {
     if (activeContent) activeContent.classList.add('active');
 
     if (tabId === 'scraper') {
-       await checkActiveTabAndUpdateScraperUI();
+        await checkActiveTabAndUpdateScraperUI();
     }
     // Update state and button texts when tab visibility changes.
     // Pass false to avoid resetting upload UI if it's already populated and user is just switching tabs.
@@ -115,19 +115,19 @@ function updateStatus(section, message, count = null, type = 'info') {
         if (section === 'scraper' && !isImaginePage) {
             shouldBeVisible = false;
         }
-         // Ensure data count visibility is also considered for overall visibility
+        // Ensure data count visibility is also considered for overall visibility
         if (count !== null && count > 0 && section === 'upload') {
             shouldBeVisible = true;
         }
 
 
-        if(shouldBeVisible) {
+        if (shouldBeVisible) {
             statusDiv.classList.remove('hidden');
         } else {
-             statusDiv.classList.add('hidden');
+            statusDiv.classList.add('hidden');
         }
 
-        statusDiv.classList.remove('status-info', 'status-success', 'status-warning', 'status-error', 'status-partial-info'); 
+        statusDiv.classList.remove('status-info', 'status-success', 'status-warning', 'status-error', 'status-partial-info');
         if (shouldBeVisible && type) {
             statusDiv.classList.add(`status-${type}`);
         }
@@ -144,9 +144,9 @@ function updateStatus(section, message, count = null, type = 'info') {
  * Displays appropriate messages for cases such as missing or invalid URL columns, absence of data rows, or partial validity of URLs in the selected column. Shows or hides upload filters depending on data validity and user selection.
  */
 function updateDetailedUploadStatus() {
-    if (!statusUploadDiv) return; // Sicherstellen, dass das Status-Div existiert
-    
-    // Standardmäßig Filter ausblenden, werden nur bei expliziter Bedingung unten wieder eingeblendet
+    if (!statusUploadDiv) return; // Ensure the status div exists
+
+    // Standardly hide filters, will be re-enabled explicitly below
     if (uploadFiltersDiv) uploadFiltersDiv.classList.add('hidden');
 
     if (!processedUploadDataInfo || !processedUploadDataInfo.headers) {
@@ -158,65 +158,54 @@ function updateDetailedUploadStatus() {
     const hasHeaders = processedUploadDataInfo.headers && processedUploadDataInfo.headers.length > 0;
     const hasValidUrlCols = processedUploadDataInfo.validUrlHeaders && processedUploadDataInfo.validUrlHeaders.length > 0;
     let statusMsg = "";
-    let statusType = 'info'; // Standardtyp
-    let showFilters = false; // Standardmäßig Filter nicht anzeigen
+    let statusType = 'info'; // Standard type
+    let showFilters = false; // Standardly do not show filters
 
     if (totalRowCount > 0 && !hasValidUrlCols) {
-        // Fall 1: Daten vorhanden, aber keine validen URL-Spalten -> Hauptwarnung
+        // Case 1: Data exists but no valid URL columns -> Main warning
         statusMsg = "No valid download URL found.";
         statusType = 'warning';
-        // Filter bleiben versteckt (Standard von oben)
+        // Filters remain hidden (standard from above)
     } else if (totalRowCount === 0) {
-        // Fall 2: Keine Datenzeilen verarbeitet
-        if (hasHeaders) { // CSV hatte Header, aber keine Datenzeilen
+        // Case 2: No data rows processed
+        if (hasHeaders) { // CSV had headers but no data rows
             statusMsg = "Processed: No data rows found.";
-        } else { // Keine Header, keine Daten (z.B. komplett leere Datei oder vor dem ersten Upload)
+        } else { // No headers, no data (e.g., completely empty file or before first upload)
             statusMsg = "Waiting for upload";
         }
-        // Filter bleiben versteckt
+        // Filters remain hidden
     } else if (totalRowCount > 0 && hasValidUrlCols) {
-        // Fall 3: Daten vorhanden UND valide URL-Spalten vorhanden
+        // Case 3: Data exists AND valid URL columns exist
         const selectedColumn = urlColumnSelect ? urlColumnSelect.value : null;
-        
-        // Prüfen, ob eine valide Spalte ausgewählt ist (nicht die "No valid URL column found"-Option)
-        const isColumnSelectedAndValid = selectedColumn && 
-                                     urlColumnSelect.selectedIndex !== -1 && 
-                                     !urlColumnSelect.options[urlColumnSelect.selectedIndex]?.disabled;
 
-        if (isColumnSelectedAndValid && processedUploadDataInfo.urlCountsPerColumn) {
+        // Check if selectedColumn is actually valid and present in processedUploadDataInfo.validUrlHeaders
+        if (!selectedColumn || !(processedUploadDataInfo.validUrlHeaders || []).includes(selectedColumn)) {
+            statusMsg = "Error: No valid URL column selected for download.";
+            statusType = 'error';
+            // Filters remain hidden
+        } else {
             const validUrlCountInSelectedColumn = processedUploadDataInfo.urlCountsPerColumn[selectedColumn] || 0;
 
             if (validUrlCountInSelectedColumn < totalRowCount) {
-                // Nicht alle Einträge in der ausgewählten Spalte sind gültig
-                statusMsg = `${validUrlCountInSelectedColumn} von ${totalRowCount} Einträgen gültig.`;
-                statusType = 'partial-info'; // Neue subtile Hervorhebungsklasse verwenden
-            } else { 
-                // Alle Einträge in der ausgewählten Spalte sind gültig
-                statusMsg = "Daten verarbeitet"; // Info über Gültigkeit wird "weggelassen", stattdessen generischer Status
-                statusType = 'info'; // Oder 'success', falls gewünscht
+                // Not all entries in the selected column are valid
+                statusMsg = `${validUrlCountInSelectedColumn} of ${totalRowCount} entries valid.`;
+                statusType = 'partial-info'; // New subtle highlighting class
+            } else {
+                // All entries in the selected column are valid
+                statusMsg = "Data processed"; // Generic status, omitting validity details
+                statusType = 'info'; // Or 'success', if desired
             }
-            showFilters = true; // Filter können angezeigt werden
-        } else if (hasValidUrlCols) { 
-            // Valide Spalten sind da, aber vielleicht noch keine explizit ausgewählt oder die Auswahl ist die Platzhalter-Option.
-            // Dies sollte durch die Vorauswahl in populateUrlColumnSelect meist zu einem validen `selectedColumn` führen.
-            // Wenn nicht, eine neutrale Aufforderung.
-            statusMsg = "Bitte URL-Spalte auswählen."; 
-            statusType = 'info';
-            showFilters = true; // Filter anzeigen, da valide Optionen existieren
-        } else {
-            // Sollte nicht erreicht werden, wenn hasValidUrlCols true ist. Sicherheits-Fallback.
-            statusMsg = "Daten verarbeitet";
-            statusType = 'info';
+            showFilters = true; // Show filters
         }
     } else {
-        // Allgemeiner Fallback, z.B. wenn processedUploadDataInfo existiert, aber totalRowCount 0 ist und keine Header (unwahrscheinlich)
+        // General fallback, e.g., if processedUploadDataInfo exists but totalRowCount is 0 and no headers (unlikely)
         statusMsg = "Waiting for upload";
-        // Filter bleiben versteckt
+        // Filters remain hidden
     }
 
     updateStatus('upload', statusMsg, totalRowCount, statusType);
-    
-    // Filter ein-/ausblenden basierend auf der showFilters-Variable
+
+    // Show/hide filters based on the showFilters variable
     if (uploadFiltersDiv) {
         if (showFilters) {
             uploadFiltersDiv.classList.remove('hidden');
@@ -235,27 +224,27 @@ function updateDetailedUploadStatus() {
 function resetUploadUI() {
     console.log("Resetting Upload UI (Downloader Tab)");
     if (csvFileInput) csvFileInput.value = null; // Clear the file input
-    
-    if (uploadFiltersDiv) uploadFiltersDiv.classList.add('hidden'); 
+
+    if (uploadFiltersDiv) uploadFiltersDiv.classList.add('hidden');
 
     if (urlColumnSelect) urlColumnSelect.innerHTML = '<option value="" disabled selected>-- Select --</option>';
     if (rowLimitInput) rowLimitInput.value = '';
     if (actionFilterContainer) actionFilterContainer.innerHTML = '<span class="no-filters-placeholder">No actions found.</span>';
-    
+
     const wasError = statusUploadDiv && statusUploadDiv.classList.contains('status-error');
-    
-    processedUploadDataInfo = null; 
+
+    processedUploadDataInfo = null;
     activeActionFilters.clear();
-    
+
     if (currentDataSource === 'upload') {
         currentDataSource = 'none';
     }
 
     if (statusUploadDiv && !wasError) {
-        statusUploadDiv.classList.remove('status-warning', 'status-partial-info'); 
-   }
+        statusUploadDiv.classList.remove('status-warning', 'status-partial-info');
+    }
     // requestAndUpdateState(false) will call updateDetailedUploadStatus, which sets the "Waiting for upload" status.
-    requestAndUpdateState(false); 
+    requestAndUpdateState(false);
 }
 
 /**
@@ -268,27 +257,27 @@ function resetUploadUI() {
  * @param {boolean|null} [uploadDataHasRows=null] - Whether the uploaded CSV contains data rows; relevant for enabling download in the downloader tab.
  */
 function updateButtonStates(isScrapingRunning, scraperHasData = null, uploadDataHasRows = null) {
-    // uploadDataHasRows ist true, wenn processedUploadDataInfo.totalRows > 0
+    // uploadDataHasRows is true if processedUploadDataInfo.totalRows > 0
 
     if (startButton) startButton.disabled = !isImaginePage || isScrapingRunning;
     if (stopButton) stopButton.disabled = !isImaginePage || !isScrapingRunning;
     if (uploadButton) uploadButton.disabled = isScrapingRunning;
 
     let canDownload = false;
-    let selectedColumnHasMinOneValidEntry = false; // Für Downloader-spezifische Prüfung
+    let selectedColumnHasMinOneValidEntry = false; // For downloader-specific check
     const overallValidUrlColumnsExist = processedUploadDataInfo?.validUrlHeaders?.length > 0;
 
     if (!isScrapingRunning) {
         if (activeTabId === 'downloader') {
-            // Bedingungen für Download im Downloader-Tab:
-            // 1. CSV wurde verarbeitet und hat Zeilen (uploadDataHasRows).
-            // 2. Es gibt überhaupt als valide erkannte URL-Spalten im CSV (overallValidUrlColumnsExist).
-            // 3. Die aktuell ausgewählte Spalte hat mindestens einen gültigen URL-Eintrag.
+            // Conditions for download in the Downloader tab:
+            // 1. CSV was processed and has rows (uploadDataHasRows).
+            // 2. There are valid URL columns in the CSV (overallValidUrlColumnsExist).
+            // 3. The currently selected column has at least one valid URL entry.
             if (uploadDataHasRows && overallValidUrlColumnsExist && urlColumnSelect && processedUploadDataInfo?.urlCountsPerColumn) {
                 const selectedColumn = urlColumnSelect.value;
-                // Ist die ausgewählte Spalte nicht die "No valid..."-Option und hat sie Einträge?
-                if (selectedColumn && 
-                    urlColumnSelect.selectedIndex !== -1 && 
+                // Is the selected column not the "No valid..." option and does it have entries?
+                if (selectedColumn &&
+                    urlColumnSelect.selectedIndex !== -1 &&
                     !urlColumnSelect.options[urlColumnSelect.selectedIndex]?.disabled &&
                     (processedUploadDataInfo.urlCountsPerColumn[selectedColumn] || 0) > 0) {
                     selectedColumnHasMinOneValidEntry = true;
@@ -297,8 +286,7 @@ function updateButtonStates(isScrapingRunning, scraperHasData = null, uploadData
             if (uploadDataHasRows && overallValidUrlColumnsExist && selectedColumnHasMinOneValidEntry) {
                 canDownload = true;
             }
-        } else if (activeTabId === 'scraper') {
-            // Bedingung für Download im Scraper-Tab:
+        } else if (activeTabId === 'scraper') { // Check if scraper has data
             if (scraperHasData === true) {
                 canDownload = true;
             }
@@ -307,10 +295,10 @@ function updateButtonStates(isScrapingRunning, scraperHasData = null, uploadData
 
     if (downloadCsvButton) {
         downloadCsvButton.disabled = !canDownload;
-        // Text basierend auf dem aktiven Tab setzen
+        // Set text based on the active tab
         if (activeTabId === 'downloader') {
             downloadCsvButton.textContent = 'Start Image Download';
-        } else { 
+        } else {
             downloadCsvButton.textContent = 'Download CSV';
         }
     }
@@ -342,10 +330,10 @@ tabButtons.forEach(button => {
 
 startButton.addEventListener('click', async () => {
     console.log('Start button clicked');
-    resetUploadUI(); 
-    currentDataSource = 'scraper'; 
+    resetUploadUI();
+    currentDataSource = 'scraper';
     updateStatus('scraper', "Starting...", null, 'info');
-    updateButtonStates(true, false, processedUploadDataInfo?.count > 0); 
+    updateButtonStates(true, false, processedUploadDataInfo?.count > 0);
 
     try {
         const [tab] = await chrome.tabs.query({ active: true, url: "*://*.midjourney.com/*" });
@@ -355,8 +343,8 @@ startButton.addEventListener('click', async () => {
                 if (chrome.runtime.lastError) {
                     console.error("Error sending start message:", chrome.runtime.lastError.message);
                     updateStatus('scraper', `Error: ${chrome.runtime.lastError.message}`, null, 'error');
-                    currentDataSource = 'none'; 
-                    requestAndUpdateState(); 
+                    currentDataSource = 'none';
+                    requestAndUpdateState();
                 } else if (response && (response.status === "started" || response.status === "already_running")) {
                     updateStatus('scraper', "Running...", null, 'info');
                     // isScrapingRunning will be updated by background message
@@ -394,16 +382,16 @@ stopButton.addEventListener('click', async () => {
         if (tab) {
             console.log(`Sending stop-scraping message to tab ID: ${tab.id}`);
             chrome.tabs.sendMessage(tab.id, { action: "stop-scraping" }, (response) => {
-                 if (chrome.runtime.lastError) {
+                if (chrome.runtime.lastError) {
                     console.error("Error sending stop message:", chrome.runtime.lastError.message);
                     updateStatus('scraper', `Error: ${chrome.runtime.lastError.message}`, null, 'error');
-                 } else if (response && (response.status === "stopped" || response.status === "already_stopped")) {
+                } else if (response && (response.status === "stopped" || response.status === "already_stopped")) {
                     updateStatus('scraper', "Stopped. Processing...", null, 'info');
-                 } else {
+                } else {
                     console.warn("Unexpected response from stop command:", response);
                     updateStatus('scraper', "Stop request sent", null, 'info');
-                 }
-                 requestAndUpdateState(); // Always update from background after attempt
+                }
+                requestAndUpdateState(); // Always update from background after attempt
             });
         } else {
             updateStatus('scraper', "Error: No active Midjourney tab found.", null, 'error');
@@ -428,7 +416,7 @@ if (csvFileInput) {
         if (!file) { console.log("No file selected."); return; }
         if (!file.name.toLowerCase().endsWith('.csv')) {
             updateStatus('upload', "Error: Please select a CSV file.", 0, 'error');
-            resetUploadUI(); 
+            resetUploadUI();
             csvFileInput.value = null; // Clear file input
             return;
         }
@@ -452,8 +440,8 @@ if (csvFileInput) {
                         // Background will send "upload_processed_result"
                     } else {
                         console.warn("Unexpected immediate response for process-uploaded-csv:", response);
-                         updateStatus('upload', "Unexpected response from background.", 0, 'warning');
-                         resetUploadUI();
+                        updateStatus('upload', "Unexpected response from background.", 0, 'warning');
+                        resetUploadUI();
                     }
                 });
             } else {
@@ -507,7 +495,7 @@ downloadCsvButton.addEventListener('click', () => {
 
     console.log("Download options:", downloadOptions);
 
-    // HIER IST DIE KORREKTUR: Bestimme die korrekte Aktion basierend auf dem aktiven Tab
+    // HERE IS THE CORRECTION: Determine the correct action based on the active tab
     const actionToPerform = activeTabId === 'downloader' ? 'start-image-download' : 'download-csv';
 
     chrome.runtime.sendMessage({ action: actionToPerform, options: downloadOptions }, (response) => {
@@ -516,14 +504,14 @@ downloadCsvButton.addEventListener('click', () => {
         if (chrome.runtime.lastError) {
             console.error("Error sending download message:", chrome.runtime.lastError.message);
             updateStatus(finalStatusSection, `Download Error: ${chrome.runtime.lastError.message}`, null, 'error');
-            return; // Frühzeitiger Ausstieg
+            return; // Early exit
         }
-        
-        // Generische Antwortbehandlung, die für beide Aktionen funktioniert
+
+        // Generic response handling that works for both actions
         if (response) {
             switch (response.status) {
                 case "download_started":
-                    updateStatus(finalStatusSection, "CSV Download initiated.", null, 'success');
+                    updateStatus(finalStatusSection, "CSV download started.", null, 'success');
                     break;
                 case "image_downloads_initiated":
                     updateStatus(finalStatusSection, `Started download of ${response.totalToDownload} images...`, null, 'info');
@@ -536,14 +524,14 @@ downloadCsvButton.addEventListener('click', () => {
                     updateStatus(finalStatusSection, `Download Error: ${response.message || 'Unknown'}`, null, 'error');
                     break;
                 default:
-                     console.warn("Unexpected download response:", response);
-                     updateStatus(finalStatusSection, "Download failed (check console).", null, 'error');
+                    console.warn("Unexpected download response:", response);
+                    updateStatus(finalStatusSection, "Download failed (check console).", null, 'error');
             }
         } else {
-             updateStatus(finalStatusSection, "No response from background.", null, 'error');
+            updateStatus(finalStatusSection, "No response from background.", null, 'error');
         }
 
-        // Status nach einem Versuch immer aktualisieren, mit kurzer Verzögerung
+        // Always update status after an attempt, with a short delay
         setTimeout(() => requestAndUpdateState(false), 1500);
     });
 });
@@ -551,27 +539,27 @@ downloadCsvButton.addEventListener('click', () => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("Popup received message from background:", message);
 
-    switch(message.action) {
+    switch (message.action) {
         case "update-status":
             const isUploaderContext = message.source === 'upload';
-            
-            // Aktualisiere die Haupt-Statusnachricht im korrekten Tab
+
+            // Update the main status message in the correct tab
             if (isUploaderContext) {
                 updateStatus('upload', message.status, message.count, 'info');
-            } else if (isImaginePage) { // Status für Scraper nur auf der richtigen Seite anzeigen
+            } else if (isImaginePage) { // Status for scraper only on the correct page
                 updateStatus('scraper', message.status, message.count, 'info');
             }
 
-            // Zeige den Namen der aktuell heruntergeladenen Datei an
+            // Show the name of the currently downloaded file
             if (message.currentItem && currentFileStatusP && isUploaderContext) {
-                currentFileStatusP.textContent = `Aktuelle Datei: ${message.currentItem}`;
+                currentFileStatusP.textContent = `Current file: ${message.currentItem}`;
                 currentFileStatusP.classList.remove('hidden');
             } else if (currentFileStatusP) {
                 currentFileStatusP.classList.add('hidden');
             }
-            
-            // Aktualisiere die Button-Zustände.
-            // 'processedUploadDataInfo' ist hier im Gültigkeitsbereich des Popups definiert und sicher.
+
+            // Update button states
+            // 'processedUploadDataInfo' is defined in the popup's scope and safe.
             const uploadHasData = (processedUploadDataInfo && processedUploadDataInfo.totalRows > 0);
             updateButtonStates(message.isRunning, message.hasData, uploadHasData);
             break;
@@ -579,26 +567,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case "upload_processed_result":
             console.log("Received upload processing result:", message);
             if (message.status === 'success' && message.result) {
-                 currentDataSource = 'upload';
-                 processedUploadDataInfo = message.result;
+                currentDataSource = 'upload';
+                processedUploadDataInfo = message.result;
 
-                 populateUrlColumnSelect(message.result.headers, message.result.validUrlHeaders);
-                 populateActionFilters(message.result.actions);
+                populateUrlColumnSelect(message.result.headers, message.result.validUrlHeaders);
+                populateActionFilters(message.result.actions);
 
-                 updateDetailedUploadStatus();
-                 // Beim Ergebnis einer Upload-Verarbeitung ist der Scraper nicht aktiv.
-                 // Der zweite Parameter (scraperHasData) ist daher false (oder null).
-                 updateButtonStates(false, false, (message.result.totalRows || 0) > 0);
-             } else {
-                 updateStatus('upload', `Error: ${message.message || 'Processing failed'}`, 0, 'error');
-                 resetUploadUI();
-             }
-             break;
-        // Hier könnten später weitere Cases für andere Nachrichten hinzukommen
+                updateDetailedUploadStatus();
+                // When receiving the result of an upload processing, the scraper is not active.
+                // The second parameter (scraperHasData) is therefore false (or null).
+                updateButtonStates(false, false, (message.result.totalRows || 0) > 0);
+            } else {
+                updateStatus('upload', `Error: ${message.message || 'Processing failed'}`, 0, 'error');
+                resetUploadUI();
+            }
+            break;
+        // More cases for other messages could be added here
     }
 
-    // Wichtig für Chrome Extension Messaging, wenn sendResponse asynchron verwendet werden KÖNNTE
-    // (obwohl wir es hier nicht explizit für alle Pfade tun, ist es eine gute Praxis).
+    // Important for Chrome Extension Messaging, if sendResponse is used asynchronously
+    // (although we don't explicitly use it for all paths here, it's good practice).
     return true;
 });
 
@@ -612,85 +600,88 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  */
 async function requestAndUpdateState(resetStateForUploadTab = true) {
     console.log("Requesting current state. Reset upload tab state:", resetStateForUploadTab);
-    
-    // Zuerst prüfen, ob wir auf der korrekten Seite für den Scraper sind
-    await checkActiveTabAndUpdateScraperUI(); 
+
+    // First, check if we are on the correct page for the scraper
+    await checkActiveTabAndUpdateScraperUI();
 
     chrome.runtime.sendMessage({ action: "get-status" }, (response) => {
         let isScrapingRunning = false;
-        let scraperHasData = false; // Wichtig für den Status der Scraper-Buttons
-        let uploadHasData = false;  // Wichtig für den Status der Uploader-Buttons
+        let scraperHasData = false; // Important for scraper button states
+        let uploadHasData = false;  // Important for uploader button states
 
         if (chrome.runtime.lastError) {
             console.error("Error getting background status:", chrome.runtime.lastError.message);
             if (isImaginePage) {
                 updateStatus('scraper', `Error: ${chrome.runtime.lastError.message}`, null, 'error');
             }
-            // Wenn ein Fehler beim Abrufen des Status auftritt und der Upload-Tab zurückgesetzt werden soll
-            // oder keine Upload-Daten vorhanden sind, den Upload-Bereich zurücksetzen/aktualisieren.
-            if (resetStateForUploadTab || !processedUploadDataInfo) { 
-                 processedUploadDataInfo = null; // Sicherstellen, dass alte Daten gelöscht werden
-                 updateDetailedUploadStatus(); // Zeigt "Waiting for upload" oder leeren Zustand
+            // If an error occurs while getting the status and the upload tab should be reset
+            // or there is no upload data, reset the upload section.
+            if (resetStateForUploadTab || !processedUploadDataInfo) {
+                processedUploadDataInfo = null; // Ensure old data is cleared
+                updateDetailedUploadStatus(); // Shows "Waiting for upload"
             }
-            // Buttons werden am Ende mit Standardwerten (false für Daten/Laufzeit) aktualisiert
+            // Buttons will be updated with default values (false for data/running) at the end
         } else if (response) {
             console.log("Received background state:", response);
             isScrapingRunning = response.isRunning || false;
-            scraperHasData = response.hasData || false; 
+            scraperHasData = response.hasData || false;
 
-            if (isImaginePage) { // Scraper-Status nur aktualisieren, wenn auf der korrekten Seite
+            if (isImaginePage) { // Update scraper status only if on the correct page
                 updateStatus('scraper', response.status || "Idle", response.count || 0, 'info');
             }
-            
-            // Upload-Daten aus der Antwort verarbeiten
+
+            // Process upload data from the response
             if (response.uploadData) {
-                 processedUploadDataInfo = response.uploadData; 
-                 uploadHasData = (processedUploadDataInfo.totalRows || 0) > 0;
-                 // UI-Elemente für den Uploader-Tab mit den neuen Daten füllen
-                 populateUrlColumnSelect(processedUploadDataInfo.headers, processedUploadDataInfo.validUrlHeaders);
-                 populateActionFilters(processedUploadDataInfo.actions);
-                 updateDetailedUploadStatus(); // Detaillierten Upload-Status anzeigen
-            } else if (resetStateForUploadTab) { 
-                 // Keine neuen Upload-Daten von der Antwort UND der Tab soll zurückgesetzt werden
-                 processedUploadDataInfo = null; 
-                 populateUrlColumnSelect([], []); // Dropdowns leeren
-                 populateActionFilters([]);
-                 updateDetailedUploadStatus(); // Zeigt "Waiting for upload"
-                 uploadHasData = false;
-            } else if (processedUploadDataInfo) { 
-                // Keine neuen Upload-Daten, Tab nicht explizit zurücksetzen, aber es existieren alte Daten
-                // -> Anzeige mit den vorhandenen alten Daten auffrischen
+                processedUploadDataInfo = response.uploadData;
+                uploadHasData = (processedUploadDataInfo.totalRows || 0) > 0;
+                // Populate uploader tab UI elements with new data
+                populateUrlColumnSelect(processedUploadDataInfo.headers, processedUploadDataInfo.validUrlHeaders);
+                populateActionFilters(processedUploadDataInfo.actions);
+                updateDetailedUploadStatus(); // Show detailed upload status
+                // When receiving new upload data, the scraper is not active.
+                // The second parameter (scraperHasData) is therefore false (or null).
+                updateButtonStates(false, false, (response.uploadData.totalRows || 0) > 0);
+            } else if (resetStateForUploadTab) {
+                // No new upload data from the response AND the tab should be reset
+                processedUploadDataInfo = null;
+                populateUrlColumnSelect([], []); // Clear dropdowns
+                populateActionFilters([]);
+                updateDetailedUploadStatus(); // Shows "Waiting for upload"
+                uploadHasData = false;
+            } else if (processedUploadDataInfo) {
+                // No new upload data, do not reset the tab, but there is existing old data
+                // -> Refresh the display with the existing old data
                 uploadHasData = (processedUploadDataInfo.totalRows || 0) > 0;
                 populateUrlColumnSelect(processedUploadDataInfo.headers, processedUploadDataInfo.validUrlHeaders);
                 populateActionFilters(processedUploadDataInfo.actions);
-                updateDetailedUploadStatus(); 
-            } else { 
-                 // Keine neuen Upload-Daten, nicht zurücksetzen, und auch keine alten Daten vorhanden
-                 processedUploadDataInfo = null; // Sicherstellen, dass es null ist
-                 updateDetailedUploadStatus(); // Zeigt "Waiting for upload"
-                 uploadHasData = false;
+                updateDetailedUploadStatus();
+            } else {
+                // No new upload data, do not reset, and there is no existing data
+                processedUploadDataInfo = null; // Ensure it is null
+                updateDetailedUploadStatus(); // Shows "Waiting for upload"
+                uploadHasData = false;
             }
-        } else { 
-            // Keine Antwort (response ist null/undefined) vom Background-Skript
+        } else {
+            // No response (response is null/undefined) from the background script
             console.warn("No response received for get-status request.");
             if (isImaginePage) {
                 updateStatus('scraper', "Could not get status.", null, 'warning');
             }
-            // Wenn resetStateForUploadTab true ist oder keine Upload-Daten existieren, Upload-Bereich zurücksetzen
+            // If the upload tab should be reset or there is no upload data, reset the upload section.
             if (resetStateForUploadTab || !processedUploadDataInfo) {
-                 processedUploadDataInfo = null;
-                 updateDetailedUploadStatus(); // Zeigt "Waiting for upload"
+                processedUploadDataInfo = null;
+                updateDetailedUploadStatus(); // Shows "Waiting for upload"
             }
-            // isScrapingRunning, scraperHasData, uploadHasData behalten ihre Default-Werte (false)
+            // isScrapingRunning, scraperHasData, uploadHasData keep their default values (false)
         }
-        
-        // Abschließend die Zustände aller Buttons basierend auf den gesammelten Informationen aktualisieren
+
+        // Finally, update the states of all buttons based on the gathered information
         updateButtonStates(isScrapingRunning, scraperHasData, uploadHasData);
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => { 
-    showTab('scraper'); 
+document.addEventListener('DOMContentLoaded', () => {
+    showTab('scraper');
     if (urlColumnSelect) {
         urlColumnSelect.addEventListener('change', updateDetailedUploadStatus);
     }
@@ -706,7 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function populateUrlColumnSelect(allHeaders = [], validUrlHeaders = []) {
     if (!urlColumnSelect) return;
-    urlColumnSelect.innerHTML = ''; 
+    urlColumnSelect.innerHTML = '';
 
     if (!validUrlHeaders || validUrlHeaders.length === 0) {
         const noUrlOption = document.createElement('option');

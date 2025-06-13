@@ -400,7 +400,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             break;
 
-        case "process-uploaded-csv":
+        case "process-uploaded-csv": {
             log('log', "Received request to process uploaded CSV.");
             isAsyncResponse = true;
             uploadedData = [];
@@ -526,7 +526,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             })();
             return true; // Keep channel open for async IIFE
 
-        case "download-csv": // Primarily for Scraper CSV, or Upload CSV as fallback
+        case "download-csv": { // Primarily for Scraper CSV, or Upload CSV as fallback
             isAsyncResponse = true; // FileReader and chrome.downloads are async
             const csvDownloadOptions = message.options || {};
             const csvSource = csvDownloadOptions.source || 'scraper';
@@ -612,7 +612,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             break;
 
-        case "start-image-download":
+        case "start-image-download": {
             isAsyncResponse = true;
             const imageOptions = message.options || {};
             log('log', `Image download request with options:`, imageOptions);
@@ -725,12 +725,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             })();
             break;
 
-        case "content-status-update":
+        case "content-status-update": {
             isScraping = message.isRunning;
             currentStatus = message.status;
             broadcastStatus();
             break;
-
+        }
         case "scraped-data":
             if (message.data && message.data.length > 0) {
                 const combinedData = [...collectedData, ...message.data];
