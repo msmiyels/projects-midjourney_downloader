@@ -548,18 +548,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case "update-status": {
             const isUploaderContext = message.source === 'upload';
 
-            // Update the main status message in the correct tab
+            // -------- status update --------
             if (isUploaderContext) {
                 updateStatus('upload', message.status, message.count, 'info');
-            } else if (isImaginePage) { // Status for scraper only on the correct page
+            } else if (isImaginePage) {
                 updateStatus('scraper', message.status, message.count, 'info');
             }
 
-            break;
-        }
-        // ... other cases ...
-    }
-            // Show the name of the currently downloaded file
+            // -------- current item --------
             if (message.currentItem && currentFileStatusP && isUploaderContext) {
                 currentFileStatusP.textContent = `Current file: ${message.currentItem}`;
                 currentFileStatusP.classList.remove('hidden');
@@ -567,13 +563,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 currentFileStatusP.classList.add('hidden');
             }
 
-            // Update button states
-            // 'processedUploadDataInfo' is defined in the popup's scope and safe.
-            const uploadHasData = (processedUploadDataInfo && processedUploadDataInfo.totalRows > 0);
+            // -------- buttons --------
+            const uploadHasData = processedUploadDataInfo?.totalRows > 0;
             updateButtonStates(message.isRunning, message.hasData, uploadHasData);
             break;
+        }
 
-        case "upload_processed_result":
+        case "upload_processed_result": {
             console.log("Received upload processing result:", message);
             if (message.status === 'success' && message.result) {
                 currentDataSource = 'upload';
@@ -591,9 +587,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 resetUploadUI();
             }
             break;
-        // More cases for other messages could be added here
+        }
+        // More cases here...
     }
-
+});
     // No need to return anything here as we're not using sendResponse asynchronously
     // The message channel will be closed automatically
 });
