@@ -338,9 +338,17 @@ function generateCsvString(options) {
 /**
  * Broadcasts the current scraping or upload status to the popup UI.
  *
- * Sends a message containing the current operation status, data counts, running state, and upload information (if available) to the popup. Handles cases where the popup is not open without interrupting execution.
+ * @param {Object} [extraFields={}] - Additional fields to include in the status payload
+ * @returns {void}
+ *
+ * @example
+ * // Basic usage
+ * broadcastStatus();
+ *
+ * // With additional fields
+ * broadcastStatus({ currentItem: 'example.jpg', progress: 50 });
  */
-function broadcastStatus() {
+function broadcastStatus(extraFields = {}) {
     const statusPayload = {
         action: "update-status",
         // Determine source based on state
@@ -355,7 +363,9 @@ function broadcastStatus() {
             uploadDataCount: processedUploadedDataInfo.count,
             // headers: processedUploadedDataInfo.headers, // Avoid sending large arrays repeatedly?
             // actions: processedUploadedDataInfo.actions
-        })
+        }),
+        // Merge any additional fields provided by the caller
+        ...extraFields
     };
     log('debug', "Broadcasting status to popup:", statusPayload);
     chrome.runtime.sendMessage(statusPayload).catch(error => {
