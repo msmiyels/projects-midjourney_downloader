@@ -545,7 +545,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("Popup received message from background:", message);
 
     switch (message.action) {
-        case "update-status":
+        case "update-status": {
             const isUploaderContext = message.source === 'upload';
 
             // Update the main status message in the correct tab
@@ -555,6 +555,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 updateStatus('scraper', message.status, message.count, 'info');
             }
 
+            break;
+        }
+        // ... other cases ...
+    }
             // Show the name of the currently downloaded file
             if (message.currentItem && currentFileStatusP && isUploaderContext) {
                 currentFileStatusP.textContent = `Current file: ${message.currentItem}`;
