@@ -204,7 +204,7 @@ function generateCsvString(options) {
     const URL_COLUMN_NAME = 'url';
     const DOWNLOAD_URL_COLUMN_NAME = 'download_url';
 
-    let collectedParams = new Set();  // Initialize as empty Set
+    // no local declaration of collectedParams here; use the global set
 
     if (source === 'scraper') {
         if (!collectedData || collectedData.length === 0) {
