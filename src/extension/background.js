@@ -525,9 +525,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
             })();
             return true; // Keep channel open for async IIFE
+        }
 
-        case "download-csv": { // Primarily for Scraper CSV, or Upload CSV as fallback
-            isAsyncResponse = true; // FileReader and chrome.downloads are async
+        case "download-csv": {
+            isAsyncResponse = true;
             const csvDownloadOptions = message.options || {};
             const csvSource = csvDownloadOptions.source || 'scraper';
             log('log', `CSV Download request for source: ${csvSource}`, csvDownloadOptions);
@@ -556,7 +557,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const linesInCsv = contentToCheck.split('\n');
                 const headersOnlyInCsv = linesInCsv.length === 1 && (processedUploadedDataInfo?.headers?.join(',') === linesInCsv[0] || collectedParams?.size > 0);
 
-
                 if (!contentToCheck || (linesInCsv.length <= 1 && !headersOnlyInCsv && linesInCsv[0].trim() === '')) {
                     log('warn', `CSV content for '${csvSource}' is effectively empty. No download.`);
                     currentStatus = "Idle - No data after filtering";
@@ -582,26 +582,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         if (downloadId) {
                             log('log', `CSV Download started (ID: ${downloadId}) for ${csvSource}.`);
                             currentStatus = "Idle";
-                            sendResponse({ status: "download_started", message: "CSV Download gestartet." });
+                            sendResponse({ status: "download_started", message: "CSV download started." });
                         } else {
                             log('warn', `CSV Download failed to start (no ID) for ${csvSource}. User might have cancelled.`);
                             currentStatus = "Download Failed";
-                            sendResponse({ status: "error", message: "CSV Download failed or cancelled." });
+                            sendResponse({ status: "error", message: "CSV download failed or was cancelled." });
                         }
                         broadcastStatus();
                     }).catch(error => {
-                        log('error', `Error in chrome.downloads.download for ${csvSource} CSV:`, error);
-                        currentStatus = "Download Error";
+                        log('error', `CSV Download failed for ${csvSource}:`, error);
+                        currentStatus = "Download Failed";
                         broadcastStatus();
-                        sendResponse({ status: "error", message: error.message });
+                        sendResponse({ status: "error", message: `Download failed: ${error.message}` });
                     });
                 };
+
                 reader.onerror = function () {
-                    log('error', 'FileReader error for CSV:', reader.error);
-                    currentStatus = "Download Prep Error";
+                    log('error', `FileReader error for ${csvSource} CSV:`, reader.error);
+                    currentStatus = "Download Failed";
                     broadcastStatus();
-                    sendResponse({ status: "error", message: `FileReader error: ${reader.error.message || 'Unknown'}` });
+                    sendResponse({ status: "error", message: `File reading failed: ${reader.error?.message || 'Unknown error'}` });
                 };
+
                 reader.readAsDataURL(blob);
             } catch (error) {
                 log('error', `Synchronous error during CSV prep for ${csvSource}:`, error);
@@ -611,6 +613,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 catch (e) { log('error', "Failed to send error for sync CSV prep error", e); }
             }
             break;
+        }
 
         case "start-image-download": {
             isAsyncResponse = true;
@@ -654,76 +657,78 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
 
             // *** BEGINN DER NEUEN, KORRIGIERTEN DOWNLOAD-LOGIK ***
+            {
+                // Anonyme asynchrone Funktion, um 'await' nutzen zu können
+                (async () => {
+                    let successCount = 0;
+                    let failureCount = 0;
+                    const totalToDownload = imagesToDownload.length;
 
-            // Anonyme asynchrone Funktion, um 'await' nutzen zu können
-            (async () => {
-                let successCount = 0;
-                let failureCount = 0;
-                const totalToDownload = imagesToDownload.length;
-
-                currentStatus = `Starte Download von ${totalToDownload} Bildern...`;
-                broadcastStatus();
-                try {
-                    sendResponse({ status: "image_downloads_initiated", message: `Starte Download von ${totalToDownload} Bildern...`, totalToDownload: totalToDownload });
-                } catch (e) {
-                    log('warn', 'sendResponse für image_downloads_initiated fehlgeschlagen (Popup evtl. schon zu)');
-                }
-
-                // SEQUENZIELLE SCHLEIFE: Behebt das Stottern und ermöglicht Live-Feedback
-                for (const [index, row] of imagesToDownload.entries()) {
-                    let finalFilename = null;
-
-                    // ROBUSTE DATEINAMEN-LOGIK: Behebt das .txt-Problem
+                    currentStatus = `Starte Download von ${totalToDownload} Bildern...`;
+                    broadcastStatus();
                     try {
-                        const imageUrl = row[selectedUrlColImg];
-                        const urlObj = new URL(imageUrl);
-                        const originalFilename = decodeURIComponent(urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1).split('?')[0]);
+                        sendResponse({ status: "image_downloads_initiated", message: `Starte Download von ${totalToDownload} Bildern...`, totalToDownload: totalToDownload });
+                    } catch (e) {
+                        log('warn', 'sendResponse für image_downloads_initiated fehlgeschlagen (Popup evtl. schon zu)');
+                    }
 
-                        if (originalFilename && originalFilename.includes('.')) {
-                            const lastDotIndex = originalFilename.lastIndexOf('.');
-                            const nameStem = originalFilename.substring(0, lastDotIndex);
-                            const nameExtension = originalFilename.substring(lastDotIndex);
-                            const stemParts = nameStem.split('_');
-                            let modifiedStem = nameStem;
-                            if (stemParts.length >= 3) {
-                                modifiedStem = stemParts.slice(0, 2).join('_');
+                    // SEQUENZIELLE SCHLEIFE: Behebt das Stottern und ermöglicht Live-Feedback
+                    for (const [index, row] of imagesToDownload.entries()) {
+                        let finalFilename = null;
+
+                        // ROBUSTE DATEINAMEN-LOGIK: Behebt das .txt-Problem
+                        try {
+                            const imageUrl = row[selectedUrlColImg];
+                            const urlObj = new URL(imageUrl);
+                            const originalFilename = decodeURIComponent(urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1).split('?')[0]);
+
+                            if (originalFilename && originalFilename.includes('.')) {
+                                const lastDotIndex = originalFilename.lastIndexOf('.');
+                                const nameStem = originalFilename.substring(0, lastDotIndex);
+                                const nameExtension = originalFilename.substring(lastDotIndex);
+                                const stemParts = nameStem.split('_');
+                                let modifiedStem = nameStem;
+                                if (stemParts.length >= 3) {
+                                    modifiedStem = stemParts.slice(0, 2).join('_');
+                                }
+                                const modifiedFilename = modifiedStem + nameExtension;
+                                const jobId = row['job_id'] || '';
+                                finalFilename = `${jobId}_${modifiedFilename}`;
+                            } else {
+                                log('error', `Konnte keinen Dateinamen mit Endung aus der URL extrahieren, überspringe: ${imageUrl}`);
+                                failureCount++;
+                                continue; // Nächste Iteration
                             }
-                            const modifiedFilename = modifiedStem + nameExtension;
-                            const jobId = row['job_id'] || '';
-                            finalFilename = `${jobId}_${modifiedFilename}`;
-                        } else {
-                            log('error', `Konnte keinen Dateinamen mit Endung aus der URL extrahieren, überspringe: ${imageUrl}`);
+                        } catch (e) {
+                            log('error', `Fehler bei URL-Verarbeitung, überspringe: ${row[selectedUrlColImg]}`, e);
                             failureCount++;
                             continue; // Nächste Iteration
                         }
-                    } catch (e) {
-                        log('error', `Fehler bei URL-Verarbeitung, überspringe: ${row[selectedUrlColImg]}`, e);
-                        failureCount++;
-                        continue; // Nächste Iteration
+
+                        // Status-Update VOR jedem Download
+                        currentStatus = `(${index + 1}/${totalToDownload}) Wird heruntergeladen...`;
+                        broadcastStatus({ currentItem: finalFilename });
+
+                        try {
+                            // 'await' stellt sicher, dass ein Download abgeschlossen ist, bevor der nächste startet
+                            const downloadId = await chrome.downloads.download({
+                                url: row[selectedUrlColImg],
+                                filename: finalFilename.replace(/__+/g, '_')
+                            });
+                            if (downloadId) { successCount++; } else { failureCount++; }
+                        } catch (err) {
+                            failureCount++;
+                            log('error', `Fehler beim Download von ${finalFilename}:`, err.message || err);
+                        }
                     }
 
-                    // Status-Update VOR jedem Download
-                    currentStatus = `(${index + 1}/${totalToDownload}) Wird heruntergeladen...`;
-                    broadcastStatus({ currentItem: finalFilename });
-
-                    try {
-                        // 'await' stellt sicher, dass ein Download abgeschlossen ist, bevor der nächste startet
-                        const downloadId = await chrome.downloads.download({
-                            url: row[selectedUrlColImg],
-                            filename: finalFilename.replace(/__+/g, '_')
-                        });
-                        if (downloadId) { successCount++; } else { failureCount++; }
-                    } catch (err) {
-                        failureCount++;
-                        log('error', `Fehler beim Download von ${finalFilename}:`, err.message || err);
-                    }
-                }
-
-                // Finaler Status
-                currentStatus = `Download abgeschlossen: ${successCount}/${totalToDownload} erfolgreich.`;
-                broadcastStatus({ currentItem: null });
-            })();
+                    // Finaler Status
+                    currentStatus = `Download abgeschlossen: ${successCount}/${totalToDownload} erfolgreich.`;
+                    broadcastStatus({ currentItem: null });
+                })();
+            }
             break;
+        }
 
         case "content-status-update": {
             isScraping = message.isRunning;
@@ -793,13 +798,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.runtime.onInstalled.addListener(() => {
     log('log', 'Extension installed or updated. Initializing state.');
     collectedData = []; collectedParams = new Set(); isScraping = false; currentStatus = "Idle"; uploadedData = []; processedUploadedDataInfo = null;
-    readyContentScripts = new Set(); // <<-- Diese Zeile hinzufügen
+    readyContentScripts = new Set();
 });
 
 chrome.runtime.onStartup.addListener(() => {
     log('log', 'Browser startup detected. Resetting extension state.');
     collectedData = []; collectedParams = new Set(); isScraping = false; currentStatus = "Idle"; uploadedData = []; processedUploadedDataInfo = null;
-    readyContentScripts = new Set(); // <<-- Diese Zeile hinzufügen
+    readyContentScripts = new Set();
 });
 
 log('log', 'Background service worker started successfully.');
