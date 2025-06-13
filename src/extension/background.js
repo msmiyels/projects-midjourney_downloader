@@ -203,6 +203,8 @@ function generateCsvString(options) {
     const URL_COLUMN_NAME = 'url';
     const DOWNLOAD_URL_COLUMN_NAME = 'download_url';
 
+    let collectedParams = new Set();  // Initialize as empty Set
+
     if (source === 'scraper') {
         if (!collectedData || collectedData.length === 0) {
             log('warn', "generateCsvString (scraper) called but collectedData is empty.");

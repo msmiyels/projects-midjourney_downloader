@@ -590,9 +590,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // More cases for other messages could be added here
     }
 
-    // Important for Chrome Extension Messaging, if sendResponse is used asynchronously
-    // (although we don't explicitly use it for all paths here, it's good practice).
-    return true;
+    // No need to return anything here as we're not using sendResponse asynchronously
+    // The message channel will be closed automatically
 });
 
 
